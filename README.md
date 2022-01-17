@@ -14,10 +14,10 @@ run_app()
 #> 
 #>     dataTableOutput, renderDataTable
 #> 
-#> Listening on http://127.0.0.1:4640
+#> Listening on http://127.0.0.1:6207
 ```
 
-<img src="JoesFlow_files/figure-markdown_github/setup-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/setup-1.png" style="display: block; margin: auto;" />
 
 JoesFlow Functions
 ------------------
@@ -30,14 +30,14 @@ meta_data=read.csv("/Users/devlij03/Desktop/JoesFlow/tests/metadata.csv", header
 datatable(sample_data[1:100,1:20])
 ```
 
-![](JoesFlow_files/figure-markdown_github/test_data-1.png)
+![](README_files/figure-markdown_github/test_data-1.png)
 
 ``` r
 
 datatable(meta_data)
 ```
 
-![](JoesFlow_files/figure-markdown_github/test_data-2.png)
+![](README_files/figure-markdown_github/test_data-2.png)
 
 ``` r
 
@@ -45,7 +45,7 @@ cluster_pca(sample_data, meta_data, 10)
 #> Using Freq as value column: use value.var to override.
 ```
 
-<img src="JoesFlow_files/figure-markdown_github/pca-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/pca-1.png" style="display: block; margin: auto;" />
 
 ``` r
 
@@ -53,7 +53,7 @@ cluster_umap(sample_data, meta_data, 10)
 #> Using Freq as value column: use value.var to override.
 ```
 
-<img src="JoesFlow_files/figure-markdown_github/umap-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/umap-1.png" style="display: block; margin: auto;" />
 
 ``` r
 
@@ -62,7 +62,7 @@ composition_plot(sample_data, meta_data, 15)
 #> Using Freq as value column: use value.var to override.
 ```
 
-<img src="JoesFlow_files/figure-markdown_github/comp_plot-1.png" style="display: block; margin: auto;" /><img src="JoesFlow_files/figure-markdown_github/comp_plot-2.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/comp_plot-1.png" style="display: block; margin: auto;" /><img src="README_files/figure-markdown_github/comp_plot-2.png" style="display: block; margin: auto;" />
 
 ``` r
 
@@ -72,4 +72,4 @@ heat_plot(sample_data, meta_data, 10)
 #> Set `ht_opt$message = FALSE` to turn off this message.
 ```
 
-<img src="JoesFlow_files/figure-markdown_github/heat_plot-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/heat_plot-1.png" style="display: block; margin: auto;" />
