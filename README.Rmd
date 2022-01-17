@@ -36,6 +36,16 @@ colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("defau
 
 ```
 
+
+## JoesFlow Installation
+
+Download the JoesFlow tar file from GitHub to your local machine
+wget https://github.com/jcooperdevlin/JoesFlow/blob/main/JoesFlow_0.0.0.9000.tar.gz
+
+Install locally in RStudio
+remotes::install_local("local/path/to/JoesFlow_0.0.0.9000.tar.gz")
+
+
 ```{r setup, fig.height = 10, fig.width = 12, fig.align = "center"}
 library(JoesFlow)
 run_app()
