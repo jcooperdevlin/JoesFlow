@@ -7,11 +7,17 @@ incorporate all aspects of a dataset in an unbiased manner.
 JoesFlow Installation
 ---------------------
 
-Download the JoesFlow tar file from GitHub to your local machine wget
-<a href="https://github.com/jcooperdevlin/JoesFlow/blob/main/JoesFlow_0.0.0.9000.tar.gz" class="uri">https://github.com/jcooperdevlin/JoesFlow/blob/main/JoesFlow_0.0.0.9000.tar.gz</a>
+Download the JoesFlow tar file from GitHub to your local machine
+
+``` r
+wget https://github.com/jcooperdevlin/JoesFlow/blob/main/JoesFlow_0.0.0.9000.tar.gz
+```
 
 Install locally in RStudio
-remotes::install\_local(“local/path/to/JoesFlow\_0.0.0.9000.tar.gz”)
+
+``` r
+remotes::install_local("local/path/to/JoesFlow_0.0.0.9000.tar.gz")
+```
 
 ``` r
 library(JoesFlow)
@@ -23,7 +29,7 @@ run_app()
 #> 
 #>     dataTableOutput, renderDataTable
 #> 
-#> Listening on http://127.0.0.1:5863
+#> Listening on http://127.0.0.1:6897
 ```
 
 <img src="README_files/figure-markdown_github/setup-1.png" style="display: block; margin: auto;" />
@@ -67,6 +73,7 @@ cluster_umap(sample_data, meta_data, 10)
 ``` r
 
 composition_plot(sample_data, meta_data, 15)
+#> Warning: Quick-TRANSfer stage steps exceeded maximum (= 2000000)
 #> Using Freq as value column: use value.var to override.
 ```
 
