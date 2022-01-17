@@ -39,8 +39,8 @@ JoesFlow Functions
 
 ``` r
 
-sample_data=read.csv("/Users/devlij03/Desktop/JoesFlow/tests/flow_test.csv", sep=',', header=T)
-meta_data=read.csv("/Users/devlij03/Desktop/JoesFlow/tests/metadata.csv", header=T, sep=',')
+sample_data=read.csv("tests/flow_test.csv", sep=',', header=T)
+meta_data=read.csv("tests/metadata.csv", header=T, sep=',')
 
 datatable(sample_data[1:100,1:20])
 ```
