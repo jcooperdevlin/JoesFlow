@@ -1,12 +1,6 @@
 ---
 title: "JoesFlow"
-output:
-  md_document:
-    variant: markdown_github
-vignette: >
-  %\VignetteIndexEntry{JoesFlow}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+output: md_document
 ---
 
 ```{r, include = FALSE}
@@ -31,6 +25,8 @@ library(uwot)
 library(ComplexHeatmap)
 library(circlize)
 
+library(JoesFlow)
+
 colors_clusters = c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
 colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
 
@@ -39,32 +35,44 @@ colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("defau
 
 ## JoesFlow Installation
 
-Download the JoesFlow tar file from GitHub to your local machine 
-``` {r install, eval=FALSE}
-wget https://github.com/jcooperdevlin/JoesFlow/blob/main/JoesFlow_0.0.0.9000.tar.gz
-```
-
 Install locally in RStudio
-``` {r install2, eval=FALSE}
-remotes::install_local("local/path/to/JoesFlow_0.0.0.9000.tar.gz")
+``` {r install, eval=FALSE}
+remotes::install_github("jcooperdevlin/JoesFlow")
 ```
 
-```{r setup, fig.height = 10, fig.width = 12, fig.align = "center"}
+```{r setup, eval=FALSE}
 library(JoesFlow)
 run_app()
+#> Loading required package: shiny
+#> 
+#> Attaching package: 'shiny'
+#> The following objects are masked from 'package:DT':
+#> 
+#>     dataTableOutput, renderDataTable
+#> 
+#> Listening on http://127.0.0.1:6897
 ```
+
+![Joe's Flow Screenshot](README_files/setup-1.png)
 
 ## JoesFlow Functions
 
 ```{r test_data}
+sample_data=read.csv("tests/flow_test.csv", sep=',', header=T)
+meta_data=read.csv("tests/metadata.csv", header=T, sep=',')
+```
 
-sample_data=read.csv("/Users/devlij03/Desktop/JoesFlow/tests/flow_test.csv", sep=',', header=T)
-meta_data=read.csv("/Users/devlij03/Desktop/JoesFlow/tests/metadata.csv", header=T, sep=',')
-
+```{r test_data output1, eval=FALSE}
 datatable(sample_data[1:100,1:20])
+```
 
+![sample_data table](README_files/test_data-1.png)
+
+```{r test_data output2, eval=FALSE}
 datatable(meta_data)
 ```
+
+![meta_data table](README_files/test_data-2.png)
 
 ```{r pca_source, echo=FALSE}
 
@@ -299,7 +307,7 @@ composition_plot=function(data, meta, k) {
     facet_wrap(~Group, ncol=k_cols, scales="free")
   grid.arrange(g1)
   total_col=ncol(plotter)
-  datatable(data.frame(plotter[,(total_col-1):total_col], plotter[,1:(total_col-2)]))
+  #datatable(data.frame(plotter[,(total_col-1):total_col], plotter[,1:(total_col-2)]))
 }
 
 heat_plot=function(data, meta, k) {
@@ -370,6 +378,8 @@ cluster_umap(sample_data, meta_data, 10)
 composition_plot(sample_data, meta_data, 15)
 
 ```
+
+![data table](README_files/comp_plot-2.png)
 
 ```{r heat_plot, fig.height = 10, fig.width = 12, fig.align = "center"}
 

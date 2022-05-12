@@ -4,87 +4,61 @@ matrix data. JoesFlow utilizes novel scRNA-seq dimension reduction
 techniques to generate interpretable and informative visualizations that
 incorporate all aspects of a dataset in an unbiased manner.
 
-JoesFlow Installation
----------------------
-
-Download the JoesFlow tar file from GitHub to your local machine
-
-``` r
-wget https://github.com/jcooperdevlin/JoesFlow/blob/main/JoesFlow_0.0.0.9000.tar.gz
-```
+## JoesFlow Installation
 
 Install locally in RStudio
 
-``` r
-remotes::install_local("local/path/to/JoesFlow_0.0.0.9000.tar.gz")
-```
+    remotes::install_github("jcooperdevlin/JoesFlow")
 
-``` r
-library(JoesFlow)
-run_app()
-#> Loading required package: shiny
-#> 
-#> Attaching package: 'shiny'
-#> The following objects are masked from 'package:DT':
-#> 
-#>     dataTableOutput, renderDataTable
-#> 
-#> Listening on http://127.0.0.1:6897
-```
+    library(JoesFlow)
+    run_app()
+    #> Loading required package: shiny
+    #> 
+    #> Attaching package: 'shiny'
+    #> The following objects are masked from 'package:DT':
+    #> 
+    #>     dataTableOutput, renderDataTable
+    #> 
+    #> Listening on http://127.0.0.1:6897
 
-<img src="README_files/figure-markdown_github/setup-1.png" style="display: block; margin: auto;" />
+![Joe’s Flow Screenshot](README_files/setup-1.png)
 
-JoesFlow Functions
-------------------
+## JoesFlow Functions
 
-``` r
+    sample_data=read.csv("tests/flow_test.csv", sep=',', header=T)
+    meta_data=read.csv("tests/metadata.csv", header=T, sep=',')
 
-sample_data=read.csv("tests/flow_test.csv", sep=',', header=T)
-meta_data=read.csv("tests/metadata.csv", header=T, sep=',')
+    datatable(sample_data[1:100,1:20])
 
-datatable(sample_data[1:100,1:20])
-```
+![sample\_data table](README_files/test_data-1.png)
 
-![](README_files/figure-markdown_github/test_data-1.png)
+    datatable(meta_data)
 
-``` r
+![meta\_data table](README_files/test_data-2.png)
 
-datatable(meta_data)
-```
 
-![](README_files/figure-markdown_github/test_data-2.png)
+    cluster_pca(sample_data, meta_data, 10)
+    #> Warning: Quick-TRANSfer stage steps exceeded maximum (= 2000000)
+    #> Using Freq as value column: use value.var to override.
 
-``` r
+<img src="README_files/figure-markdown_strict/pca-1.png" style="display: block; margin: auto;" />
 
-cluster_pca(sample_data, meta_data, 10)
-#> Using Freq as value column: use value.var to override.
-```
 
-<img src="README_files/figure-markdown_github/pca-1.png" style="display: block; margin: auto;" />
+    cluster_umap(sample_data, meta_data, 10)
+    #> Using Freq as value column: use value.var to override.
 
-``` r
+<img src="README_files/figure-markdown_strict/umap-1.png" style="display: block; margin: auto;" />
 
-cluster_umap(sample_data, meta_data, 10)
-#> Using Freq as value column: use value.var to override.
-```
 
-<img src="README_files/figure-markdown_github/umap-1.png" style="display: block; margin: auto;" />
+    composition_plot(sample_data, meta_data, 15)
+    #> Warning: Quick-TRANSfer stage steps exceeded maximum (= 2000000)
+    #> Using Freq as value column: use value.var to override.
 
-``` r
+<img src="README_files/figure-markdown_strict/comp_plot-1.png" style="display: block; margin: auto;" />
 
-composition_plot(sample_data, meta_data, 15)
-#> Warning: Quick-TRANSfer stage steps exceeded maximum (= 2000000)
-#> Using Freq as value column: use value.var to override.
-```
+![data table](README_files/comp_plot-2.png)
 
-<img src="README_files/figure-markdown_github/comp_plot-1.png" style="display: block; margin: auto;" /><img src="README_files/figure-markdown_github/comp_plot-2.png" style="display: block; margin: auto;" />
 
-``` r
+    heat_plot(sample_data, meta_data, 10)
 
-heat_plot(sample_data, meta_data, 10)
-#> 'magick' package is suggested to install to give better rasterization.
-#> 
-#> Set `ht_opt$message = FALSE` to turn off this message.
-```
-
-<img src="README_files/figure-markdown_github/heat_plot-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_strict/heat_plot-1.png" style="display: block; margin: auto;" />
