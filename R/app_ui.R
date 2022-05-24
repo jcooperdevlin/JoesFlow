@@ -7,9 +7,6 @@
 #' 
 #' 
 
-library(DT)
-library(shinythemes)
-
 loadingLogo <- function(href, src, loadingsrc, height = NULL, width = NULL, alt = NULL) {
   tagList(
     tags$head(

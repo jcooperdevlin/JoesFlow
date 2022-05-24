@@ -14,7 +14,6 @@ knitr::opts_chunk$set(
 The goal of JoesFlow is to analyze high-dimensional single cell data from flow cytometry, scRNA-seq, CITE-seq and any kind of single cell matrix data. JoesFlow utilizes novel scRNA-seq dimension reduction techniques to generate interpretable and informative visualizations that incorporate all aspects of a dataset in an unbiased manner.
 
 ```{r libs, echo=FALSE, message=FALSE, results='hide'}
-library(DT)
 library(RColorBrewer)
 library(ggsci)
 library(ggplot2)
@@ -26,6 +25,8 @@ library(ComplexHeatmap)
 library(circlize)
 
 library(JoesFlow)
+
+library(dplyr)
 
 colors_clusters = c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
 colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
@@ -75,104 +76,6 @@ datatable(meta_data)
 ![meta_data table](README_files/test_data-2.png)
 
 ```{r pca_source, echo=FALSE}
-
-cluster_pca=function(data, meta, k) {
-  data_mat2=data[,-1]
-  ids=data[,1]
-  data_mat2=data.matrix(data_mat2)
-
-  pp=prcomp(data_mat2, scale=T)
-  pp
-  
-  kmeaner=kmeans(data_mat2, k)
-  kk=paste0("C", kmeaner$cluster)
-  
-  kmeans=as.character(kk)
-  
-  #actual PCA
-  plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=ids)
-  plotter$Kmeans=as.character(kmeans)
-  
-  plotter$Group=as.character(plotter$SampleID)
-  samps=as.character(unique(plotter$SampleID))
-  for(jj in 1:length(samps)){
-    grouper=subset(meta, ID==samps[jj])
-    grouper=as.character(grouper$Group[1])
-    
-    plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-  }
-    
-  PoV <- pp$sdev^2/sum(pp$sdev^2)
-    
-  colors_samples2=colors_samples
-   
-  gg1=ggplot(plotter, aes(PC1, PC2, color=Group)) +
-    geom_point() + theme_bw() +
-    scale_color_manual(values=colors_samples2) +
-    xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-    ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-    theme(axis.text=element_text(color='black', size=14),
-          axis.title=element_text(color='black', size=16))
-    
-  
-  #kmeans pca
-  gg2=ggplot(sample(plotter), aes(PC1, PC2, color=Kmeans)) +
-      geom_point() + theme_bw() +
-      scale_color_manual(values=colors_clusters) +
-      xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-  
-  #sample based pca
-    
-  totaler=data.frame(table(ids))
-  k_df = data.frame(table(kmeans, ids))
-  k_mat = dcast(k_df, ids ~ kmeans)
-  
-  k_mat=k_mat[,-1]
-  k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-  
-  pp=prcomp(k_add)
-  plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=totaler$ids)
-      
-  plotter$Group=as.character(plotter$SampleID)
-  samps=as.character(unique(plotter$SampleID))
-  for(jj in 1:length(samps)){
-    grouper=subset(meta, ID==samps[jj])
-    grouper=as.character(grouper$Group[1])
-    
-    plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-  }
-    
-  PoV <- pp$sdev^2/sum(pp$sdev^2)
-  
-  colors_samples2=colors_samples
-  
-  pp1=ggplot(plotter, aes(PC1, PC2, color=Group, label=SampleID)) +
-    geom_point(size=4) + theme_bw() +
-    geom_label_repel(size=6) +
-    scale_color_manual(values=colors_samples2) +
-    xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-    ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-    theme(axis.text=element_text(color='black', size=14),
-          axis.title=element_text(color='black', size=16))
-  
-  #loadings
-  
-  pp_load=pp$rotation
-  plotter2=data.frame(PC1=pp_load[,1], PC2=pp_load[,2], Label=rownames(pp_load))
-  pp2=ggplot(plotter2, aes(PC1, PC2, color=Label, label=Label)) +
-    theme_bw() +
-    geom_label_repel(size=6) +
-    scale_color_manual(values=colors_clusters) +
-    #xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-    #ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-    theme(axis.text=element_text(color='black', size=14),
-          axis.title=element_text(color='black', size=16))
-  
-  return(grid.arrange(gg1,gg2,pp1,pp2, nrow=2))
-}
 
 cluster_umap=function(data, meta, k) {
   data_mat2=data[,-1]
@@ -363,8 +266,39 @@ heat_plot=function(data, meta, k) {
 
 ```{r pca, fig.height = 10, fig.width = 12, fig.align = "center"}
 
-cluster_pca(sample_data, meta_data, 10)
+# PCA cluster
+pp <- select(sample_data, -SampleID) %>%
+  prcomp(scale=T)
+  
+gg1 <- clusterJF(pp, ids = sample_data$SampleID, 
+            meta = meta_data$Group, 
+            colors = colors_samples)
+ 
+# Kmeans cluster
+set.seed(23948)
+kmeans_groups <- select(sample_data, -SampleID) %>%
+  kmeans(10) %$% cluster %>%
+  {paste0('C', .)} # add a 'C' on the front of each group
+  
+gg2 <- clusterJF(pp, ids = 1:nrow(sample_data),
+                 meta = kmeans_groups,
+                 colors = colors_clusters,
+                 legend.name = 'Kmeans')
 
+# sample-based pca
+groups_table <- with(sample_data, table(SampleID, kmeans_groups))
+
+pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
+  prcomp()
+
+gg3 <- sb_clusterJF(pp, ids = rownames(groups_table),
+                    meta = meta_data$Group,
+                    colors = colors_samples)
+
+# loadings
+gg4 <- sb_loadingsJF(pp, colors = colors_clusters)
+
+grid.arrange(gg1,gg2,gg3,gg4, nrow=2)
 ```
 
 ```{r umap, fig.height = 10, fig.width = 12, fig.align = "center"}

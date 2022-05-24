@@ -6,28 +6,6 @@
 #' @noRd
 app_server <- function(input, output, session) {
   
-  library(DT)
-  library(ggplot2)
-  library(matrixStats)
-  library(uwot)
-  library(RColorBrewer)
-  library(ggsci)
-  library(reshape2)
-  library(gridExtra)
-  library(ggrepel)
-  library(Rtsne)
-  library(ComplexHeatmap)
-  library(circlize)
-  library(hexbin)
-  library(dplyr)
-  library(periscope)
-  library(cowplot)
-  library(fastcluster)
-  
-  #library(RANN)
-  #library(igraph)
-  #library(mstknnclust)
-  
   colors_clusters_og = c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
   colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
   
@@ -231,56 +209,23 @@ app_server <- function(input, output, session) {
   })
   
   
+  # PCA analysis
   pca_coords<-reactive({
     withProgress({
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      
-      pp=prcomp(data_mat2, scale=T)
-      pp
-      
+
+      data_mat()[,-1] %>% # strip ID column
+        data.matrix() %>% # convert to matrix
+        prcomp(scale=T)   # run PCA
+
     }, message="Calculating PCA")
   })
   
   output$pca_plot = renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    
-    pp=pca_coords()
-    plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=ids)
-    
-    if(length(input$meta_val)>0){
-      grouper=meta_mat()[,input$meta_val]
-      
-      plotter$Group=as.character(plotter$SampleID)
-      samps=as.character(unique(plotter$SampleID))
-      for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
-        grouper=as.character(grouper[,input$meta_val][1])
-        
-        plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-      }
-    } else {
-      plotter$Group=plotter$SampleID
-    }
-    
-    
-    PoV <- pp$sdev^2/sum(pp$sdev^2)
-    
-    colors_samples2=colors_samples
-    #if(min(table(plotter$Group))<2){
-    #  colors_samples2=c(rep("black", length(unique(plotter$Group))))
-    #} 
-    
-    gg=ggplot(plotter, aes(PC1, PC2, color=Group)) +
-      geom_point() + theme_bw() +
-      scale_color_manual(values=colors_samples2) +
-      xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
+
+    gg <- pca_coords() %>%
+      clusterJF(ids = data_mat()[,1],
+                meta = meta_mat()[,2],
+                colors = colors_samples)
     
     vals$pca_samps<-gg
     
@@ -290,24 +235,12 @@ app_server <- function(input, output, session) {
   
   
   output$pca_k_plot = renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
     
-    pp=pca_coords()
-    plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=ids)
-    
-    plotter$Kmeans=as.character(kmeaner())
-    
-    PoV <- pp$sdev^2/sum(pp$sdev^2)
-    
-    gg=ggplot(sample(plotter), aes(PC1, PC2, color=Kmeans)) +
-      geom_point() + theme_bw() +
-      scale_color_manual(values=colors_clusters()) +
-      xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
+    gg <- pca_coords() %>%
+      clusterJF(ids = 1:nrow(data_mat()),
+                meta = kmeaner(),
+                colors = colors_clusters(),
+                legend.name = 'Kmeans')
     
     vals$pca_kmeans<-gg
     
@@ -315,68 +248,21 @@ app_server <- function(input, output, session) {
     
   })
   
+  # sample-based PCA
   output$samp_p_pca <- renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    kmeans=as.character(kmeaner())
     
-    totaler=data.frame(table(ids))
-    k_df = data.frame(table(kmeans, ids))
-    k_mat = dcast(k_df, ids ~ kmeans)
+    groups_table <- table(data_mat()[,1], kmeaner())
     
-    k_mat=k_mat[,-1]
-    k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
+    pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
+      prcomp()
     
-    pp=prcomp(k_add)
-    plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=totaler$ids)
+    pp1 <- sb_clusterJF(pp, ids = rownames(groups_table),
+                        meta = meta_mat()[,2],
+                        colors = colors_samples)
     
-    if(length(input$meta_val)>0){
-      grouper=meta_mat()[,input$meta_val]
-      
-      plotter$Group=as.character(plotter$SampleID)
-      samps=as.character(unique(plotter$SampleID))
-      for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
-        grouper=as.character(grouper[,input$meta_val][1])
-        
-        plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-      }
-    } else {
-      plotter$Group=plotter$SampleID
-    }
-    
-    PoV <- pp$sdev^2/sum(pp$sdev^2)
-    
-    colors_samples2=colors_samples
-    if(min(table(plotter$Group))<2){
-      colors_samples2=c(rep("black", length(unique(plotter$Group))))
-    } 
-    
-    pp1=ggplot(plotter, aes(PC1, PC2, color=Group, label=SampleID)) +
-      geom_point(size=4) + theme_bw() +
-      geom_label_repel(size=6) +
-      scale_color_manual(values=colors_samples2) +
-      xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-    
-    if(min(table(plotter$Group))<2){
-      pp1=pp1+theme(legend.position='none')
-    } 
-    
-    pp_load=pp$rotation
-    plotter2=data.frame(PC1=pp_load[,1], PC2=pp_load[,2], Label=rownames(pp_load))
-    pp2=ggplot(plotter2, aes(PC1, PC2, color=Label, label=Label)) +
-      theme_bw() +
-      geom_label_repel(size=6) +
-      scale_color_manual(values=colors_clusters()) +
-      #xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      #ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-    
+    # loadings
+    pp2 <- sb_loadingsJF(pp, colors = colors_clusters())
+
     vals$pca_clusters<-arrangeGrob(pp1,pp2, nrow=1)
     grid.arrange(pp1,pp2, nrow=1)
     
