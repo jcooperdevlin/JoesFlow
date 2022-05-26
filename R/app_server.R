@@ -214,7 +214,6 @@ app_server <- function(input, output, session) {
     withProgress({
 
       data_mat()[,-1] %>% # strip ID column
-        data.matrix() %>% # convert to matrix
         prcomp(scale=T)   # run PCA
 
     }, message="Calculating PCA")
@@ -249,24 +248,32 @@ app_server <- function(input, output, session) {
   })
   
   # sample-based PCA
-  output$samp_p_pca <- renderPlot({
-    
+  samp_pca <- reactive({
     groups_table <- table(data_mat()[,1], kmeaner())
     
     pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
-      prcomp()
-    
-    pp1 <- sb_clusterJF(pp, ids = rownames(groups_table),
-                        meta = meta_mat()[,2],
-                        colors = colors_samples)
-    
-    # loadings
-    pp2 <- sb_loadingsJF(pp, colors = colors_clusters())
-
-    vals$pca_clusters<-arrangeGrob(pp1,pp2, nrow=1)
-    grid.arrange(pp1,pp2, nrow=1)
-    
+      prcomp() %>%
+      
+      sb_clusterJF(ids = rownames(groups_table),
+                   meta = meta_mat()[,2],
+                   colors1 = colors_samples,
+                   colors2 = colors_clusters())
   })
+  
+  # do we really need to replicate this a bunch of times?
+  output$samp_p_pca <- renderPlot({
+    vals$pca_clusters <- samp_pca()
+    print(samp_pca())
+  })
+  output$samp_pca <- renderPlot({
+    vals$umap_clusters <- samp_pca()
+    print(samp_pca())
+  })
+  output$samp_t_pca <- renderPlot({
+    vals$tsne_clusters <- samp_pca()
+    print(samp_pca())
+  })
+  
   
   
   output$pca_download = downloadHandler(
@@ -341,55 +348,21 @@ app_server <- function(input, output, session) {
   
   umap_coords<-reactive({
     withProgress({
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      if(ncol(data_mat2)>=15){
-        mnist_umap <- umap(data_mat2, pca = 15, fast_sgd = TRUE)
-      } else {
-        mnist_umap <- umap(data_mat2, pca = ncol(data_mat2), fast_sgd = TRUE)
-      }
-      colnames(mnist_umap)=c("UMAP_1", "UMAP_2")
-      mnist_umap
+      
+      data_mat()[,-1] %>%
+        umap(pca = min(15, ncol(.)), fast_sgd = TRUE)
       
     }, message="Calculating UMAP")
   })
   
   
   output$umap_plot = renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
     
-    umap_df=umap_coords()
-    plotter=data.frame(UMAP_1=umap_df[,1], UMAP_2=umap_df[,2], SampleID=ids)
-    
-    if(length(input$meta_val)>0){
-      grouper=meta_mat()[,input$meta_val]
-      
-      plotter$Group=as.character(plotter$SampleID)
-      samps=as.character(unique(plotter$SampleID))
-      for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
-        grouper=as.character(grouper[,input$meta_val][1])
-        
-        plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-      }
-    } else {
-      plotter$Group=plotter$SampleID
-    }
-    
-    colors_samples2=colors_samples
-    #if(min(table(plotter$Group))<2){
-    #  colors_samples2=c(rep("black", length(unique(plotter$Group))))
-    #} 
-    
-    gg=ggplot(sample(plotter), aes(UMAP_1, UMAP_2, color=Group)) +
-      geom_point() + theme_bw() +
-      scale_color_manual(values=colors_samples2) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-    
+    gg <- umap_coords() %>%
+      clusterJF(ids = data_mat()[,1],
+                meta = meta_mat()[,2],
+                colors = colors_samples)
+
     vals$umap_samps<-gg
     
     print(gg)
@@ -471,94 +444,17 @@ app_server <- function(input, output, session) {
   })
   
   output$umap_k_plot = renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    
-    umap_df=umap_coords()
-    plotter=data.frame(UMAP_1=umap_df[,1], UMAP_2=umap_df[,2], SampleID=ids)
-    
-    plotter$Kmeans=as.character(kmeaner())
-    
-    gg=ggplot(sample(plotter), aes(UMAP_1, UMAP_2, color=Kmeans)) +
-      geom_point() + theme_bw() +
-      scale_color_manual(values=colors_clusters()) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
+
+    gg <- umap_coords() %>%
+      clusterJF(ids = 1:nrow(data_mat()),
+                meta = kmeaner(),
+                colors = colors_clusters(),
+                legend.name = 'Kmeans')
     
     vals$umap_kmeans<-gg
     
     print(gg)
   })
-  
-  output$samp_pca <- renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    kmeans=as.character(kmeaner())
-    
-    totaler=data.frame(table(ids))
-    k_df = data.frame(table(kmeans, ids))
-    k_mat = dcast(k_df, ids ~ kmeans)
-    
-    k_mat=k_mat[,-1]
-    k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-    
-    pp=prcomp(k_add)
-    plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=totaler$ids)
-    
-    if(length(input$meta_val)>0){
-      grouper=meta_mat()[,input$meta_val]
-      
-      plotter$Group=as.character(plotter$SampleID)
-      samps=as.character(unique(plotter$SampleID))
-      for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
-        grouper=as.character(grouper[,input$meta_val][1])
-        
-        plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-      }
-    } else {
-      plotter$Group=plotter$SampleID
-    }
-    
-    PoV <- pp$sdev^2/sum(pp$sdev^2)
-    
-    colors_samples2=colors_samples
-    if(min(table(plotter$Group))<2){
-      colors_samples2=c(rep("black", length(unique(plotter$Group))))
-    } 
-    
-    pp1=ggplot(plotter, aes(PC1, PC2, color=Group, label=SampleID)) +
-      geom_point(size=4) + theme_bw() +
-      geom_label_repel(size=6) +
-      scale_color_manual(values=colors_samples2) +
-      xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-    
-    if(min(table(plotter$Group))<2){
-      pp1=pp1+theme(legend.position='none')
-    } 
-    
-    pp_load=pp$rotation
-    plotter2=data.frame(PC1=pp_load[,1], PC2=pp_load[,2], Label=rownames(pp_load))
-    pp2=ggplot(plotter2, aes(PC1, PC2, color=Label, label=Label)) +
-      theme_bw() +
-      geom_label_repel(size=6) +
-      scale_color_manual(values=colors_clusters()) +
-      #xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      #ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-    
-    vals$umap_clusters<-arrangeGrob(pp1,pp2, nrow=1)
-    grid.arrange(pp1,pp2, nrow=1)
-    
-    
-  })
-  
   
   output$umap_download = downloadHandler(
     filename = 'UMAP_plots.png',
@@ -704,74 +600,6 @@ app_server <- function(input, output, session) {
     vals$tsne_kmeans<-gg
     
     print(gg)
-    
-  })
-  
-  output$samp_t_pca <- renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    kmeans=as.character(kmeaner())
-    
-    totaler=data.frame(table(ids))
-    k_df = data.frame(table(kmeans, ids))
-    k_mat = dcast(k_df, ids ~ kmeans)
-    
-    k_mat=k_mat[,-1]
-    k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-    
-    pp=prcomp(k_add)
-    plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=totaler$ids)
-    
-    if(length(input$meta_val)>0){
-      grouper=meta_mat()[,input$meta_val]
-      
-      plotter$Group=as.character(plotter$SampleID)
-      samps=as.character(unique(plotter$SampleID))
-      for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
-        grouper=as.character(grouper[,input$meta_val][1])
-        
-        plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-      }
-    } else {
-      plotter$Group=plotter$SampleID
-    }
-    
-    PoV <- pp$sdev^2/sum(pp$sdev^2)
-    
-    colors_samples2=colors_samples
-    if(min(table(plotter$Group))<2){
-      colors_samples2=c(rep("black", length(unique(plotter$Group))))
-    } 
-    
-    pp1=ggplot(plotter, aes(PC1, PC2, color=Group, label=SampleID)) +
-      geom_point(size=4) + theme_bw() +
-      geom_label_repel(size=6) +
-      scale_color_manual(values=colors_samples2) +
-      xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-    
-    if(min(table(plotter$Group))<2){
-      pp1=pp1+theme(legend.position='none')
-    } 
-    
-    pp_load=pp$rotation
-    plotter2=data.frame(PC1=pp_load[,1], PC2=pp_load[,2], Label=rownames(pp_load))
-    pp2=ggplot(plotter2, aes(PC1, PC2, color=Label, label=Label)) +
-      theme_bw() +
-      geom_label_repel(size=6) +
-      scale_color_manual(values=colors_clusters()) +
-      #xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
-      #ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-    
-    vals$tsne_clusters<-arrangeGrob(pp1,pp2, nrow=1)
-    grid.arrange(pp1,pp2, nrow=1)
-    
     
   })
   

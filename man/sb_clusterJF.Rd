@@ -4,7 +4,7 @@
 \alias{sb_clusterJF}
 \title{Plot a sample based cluster for JoesFlow}
 \usage{
-sb_clusterJF(clustered_data, ids, meta, colors)
+sb_clusterJF(clustered_data, ids, meta, colors1, colors2)
 }
 \arguments{
 \item{clustered_data}{Object containing clustered data (expects output from `prcomp` or `uamp`)}
@@ -13,7 +13,9 @@ sb_clusterJF(clustered_data, ids, meta, colors)
 
 \item{meta}{Data frame containing metadata, with SampleID in the first column and Group label in the second column}
 
-\item{colors}{Vector of colors for each group}
+\item{colors1}{Vector of colors for samples}
+
+\item{colors2}{Vector of colors for clusters}
 }
 \value{
 A ggplot object
