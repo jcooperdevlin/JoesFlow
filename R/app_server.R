@@ -6,8 +6,8 @@
 #' @noRd
 app_server <- function(input, output, session) {
   
-  colors_clusters_og = c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
-  colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
+  colors_clusters_og = c(ggsci::pal_d3("category10")(10), ggsci::pal_d3("category20b")(20), ggsci::pal_igv("default")(51))
+  colors_samples = c(RColorBrewer::brewer.pal(5, "Set1"), RColorBrewer::brewer.pal(8, "Dark2"), ggsci::pal_igv("default")(51))
   
   options(shiny.maxRequestSize=1000*1024^2)
   
@@ -32,9 +32,9 @@ app_server <- function(input, output, session) {
       colors_sel=colors_clusters_og
     } else {
       if(length(unique(kmeaner()))<8){
-        colors_sel=brewer.pal(n = length(unique(kmeaner())), name = input$colpal)
+        colors_sel=RColorBrewer::brewer.pal(n = length(unique(kmeaner())), name = input$colpal)
       } else {
-        col1=brewer.pal(n = 8, name = input$colpal)
+        col1=RColorBrewer::brewer.pal(n = 8, name = input$colpal)
         col2=sample(colors_clusters_og, (length(unique(kmeaner()))-8))
         colors_sel=c(col1,col2)
       }
@@ -48,7 +48,7 @@ app_server <- function(input, output, session) {
     if (is.null(inFile))
       return(NULL)
     
-    tt=read.csv(inFile$datapath, header = T, sep=',')
+    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
     if(input$subsample<1){
       tt=tt[sample(rownames(tt), nrow(tt)*input$subsample),]
     }
@@ -63,16 +63,16 @@ app_server <- function(input, output, session) {
     if (is.null(inFile))
       return(NULL)
     
-    tt=read.csv(inFile$datapath, header = T, sep=',')
+    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
     tt
     
   })
   
-  output$metadata <- renderDT({
+  output$metadata <- DT::renderDT({
     meta_mat()
   })
   
-  output$contents <- renderDT({
+  output$contents <- DT::renderDT({
     data_mat()
   })
   
@@ -80,13 +80,13 @@ app_server <- function(input, output, session) {
     data_mat2=data_mat()[,-1]
     data_mat2=data.matrix(data_mat2)
     
-    vars=colVars(data_mat2)
-    sds=colSds(data_mat2)
+    vars=matrixStats::colVars(data_mat2)
+    sds=matrixStats::colSds(data_mat2)
     means=colSums(data_mat2)
     
     plotter=data.frame(Feature=colnames(data_mat2), vars, sds, means)
     
-    labels=data.frame(Feature=colnames(data_mat2), xPos=max(means), yPos=max((density(means))$y))
+    labels=data.frame(Feature=colnames(data_mat2), xPos=max(means), yPos=max((stats::density(means))$y))
     g1=ggplot(plotter, aes(means)) + geom_density(color='dodgerblue2') + theme_minimal() + 
       xlab("Feature Mean") + ylab("Density") +
       geom_vline(xintercept = input$mean_cutoff, color="black", size=3)
@@ -97,7 +97,7 @@ app_server <- function(input, output, session) {
       xlab("Feature Variance") + ylab("Density") +
       geom_vline(xintercept = input$var_cutoff, color="black", size=3)
     
-    grid.arrange(g1,g2,g3)
+    gridExtra::grid.arrange(g1,g2,g3)
     
   }, height=500)
   
@@ -106,11 +106,11 @@ app_server <- function(input, output, session) {
     data_mat2=data.matrix(data_mat2)
     
     rvars=data.frame(Feature=colnames(data_mat2),
-                     Variance=colVars(data_mat2))
+                     Variance=matrixStats::colVars(data_mat2))
     rvars=rvars[order(rvars$Variance, decreasing=T),]
     
     rvars$Feature=factor(rvars$Feature, levels=rev(as.character(rvars$Feature)))
-    gg=ggplot(rvars[1:15,], aes(Feature, Variance)) + geom_col(fill='navy') +
+    gg=ggplot(rvars[1:15,], aes(.data$Feature, .data$Variance)) + geom_col(fill='navy') +
       coord_flip() + theme_bw() + ggtitle("Cellular Variance") +
       theme(axis.text=element_text(color='black', size=14),
             axis.title=element_text(color='black', size=16),
@@ -145,15 +145,15 @@ app_server <- function(input, output, session) {
       plotter$Group=plotter$SampleID
     }
     
-    h_agg=aggregate(data_mat2, by=list(plotter$Group), "mean")
+    h_agg=stats::aggregate(data_mat2, by=list(plotter$Group), "mean")
     h_agg1=data.matrix(h_agg[,-1])
     
     rvars=data.frame(Feature=colnames(h_agg1),
-                     Variance=colVars(h_agg1))
+                     Variance=matrixStats::colVars(h_agg1))
     rvars=rvars[order(rvars$Variance, decreasing=T),]
     
     rvars$Feature=factor(rvars$Feature, levels=rev(as.character(rvars$Feature)))
-    gg=ggplot(rvars[1:15,], aes(Feature, Variance)) + geom_col(fill='navy') +
+    gg=ggplot(rvars[1:15,], aes(.data$Feature, .data$Variance)) + geom_col(fill='navy') +
       coord_flip() + theme_bw() + ggtitle("Sample Variance") +
       theme(axis.text=element_text(color='black', size=14),
             axis.title=element_text(color='black', size=16),
@@ -169,11 +169,11 @@ app_server <- function(input, output, session) {
   output$feat_download = downloadHandler(
     filename = 'FeaturePlot.pdf',
     content = function(file) {
-      pdf(file, width=input$download_width, height=input$download_height)
+      grDevices::pdf(file, width=input$download_width, height=input$download_height)
       print(
-        grid.arrange(vals$feat_gg, vals$samp_gg, nrow=1)
+        gridExtra::grid.arrange(vals$feat_gg, vals$samp_gg, nrow=1)
       )
-      dev.off()
+      grDevices::dev.off()
     })
   
   
@@ -214,7 +214,7 @@ app_server <- function(input, output, session) {
     withProgress({
 
       data_mat()[,-1] %>% # strip ID column
-        prcomp(scale=T)   # run PCA
+        stats::prcomp(scale=T)   # run PCA
 
     }, message="Calculating PCA")
   })
@@ -252,7 +252,7 @@ app_server <- function(input, output, session) {
     groups_table <- table(data_mat()[,1], kmeaner())
     
     pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
-      prcomp() %>%
+      stats::prcomp() %>%
       
       sb_clusterJF(ids = rownames(groups_table),
                    meta = meta_mat()[,2],
@@ -279,13 +279,13 @@ app_server <- function(input, output, session) {
   output$pca_download = downloadHandler(
     filename = 'PCA_plots.png',
     content = function(file) {
-      png(file, width=input$download_width, height=input$download_height, units="in", res=200)
+      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
       print(
-        grid.arrange(
-          arrangeGrob(vals$pca_samps, vals$pca_kmeans, nrow=1),
+        gridExtra::grid.arrange(
+          gridExtra::arrangeGrob(vals$pca_samps, vals$pca_kmeans, nrow=1),
           vals$pca_clusters, nrow=2)
       )
-      dev.off()
+      grDevices::dev.off()
     })
   
   output$pca_download_vals = downloadHandler(
@@ -298,11 +298,11 @@ app_server <- function(input, output, session) {
       
       totaler=data.frame(table(ids))
       k_df = data.frame(table(kmeans, ids))
-      k_mat = dcast(k_df, ids ~ kmeans)
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
       
       k_mat=k_mat[,-1]
       k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-      pp=prcomp(k_add)
+      pp=stats::prcomp(k_add)
       plotter=data.frame(pp$x)
       colnames(plotter)=paste0("PC", 1:ncol(plotter))
       plotter$SampleID=totaler$ids
@@ -321,7 +321,7 @@ app_server <- function(input, output, session) {
       } else {
         plotter$Group=plotter$SampleID
       }
-      write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
     })
   
   output$pca_download_loading = downloadHandler(
@@ -334,15 +334,15 @@ app_server <- function(input, output, session) {
       
       totaler=data.frame(table(ids))
       k_df = data.frame(table(kmeans, ids))
-      k_mat = dcast(k_df, ids ~ kmeans)
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
       
       k_mat=k_mat[,-1]
       k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
       
-      pp=prcomp(k_add)
+      pp=stats::prcomp(k_add)
       plotter=data.frame(pp$rotation)
       
-      write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
+      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
     })
   
   
@@ -350,7 +350,7 @@ app_server <- function(input, output, session) {
     withProgress({
       
       data_mat()[,-1] %>%
-        umap(pca = min(15, ncol(.)), fast_sgd = TRUE)
+        uwot::umap(pca = min(15, ncol(.)), fast_sgd = TRUE)
       
     }, message="Calculating UMAP")
   })
@@ -403,8 +403,8 @@ app_server <- function(input, output, session) {
         kmeaner=kmeans(data_mat2, input$kmean)
         kk=paste0("C", kmeaner$cluster)
       } else {
-        hc <- hclust(dist(data_mat2)^2, "cen")
-        memb <- cutree(hc, k = input$kmean)
+        hc <- fastcluster::hclust(stats::dist(data_mat2)^2, "cen")
+        memb <- stats::cutree(hc, k = input$kmean)
         kk=paste0("C", as.character(memb))
         
         #print(dim(data_mat2))
@@ -459,13 +459,13 @@ app_server <- function(input, output, session) {
   output$umap_download = downloadHandler(
     filename = 'UMAP_plots.png',
     content = function(file) {
-      png(file, width=input$download_width, height=input$download_height, units="in", res=200)
+      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
       print(
-        grid.arrange(
-          arrangeGrob(vals$umap_samps, vals$umap_kmeans, nrow=1),
+        gridExtra::grid.arrange(
+          gridExtra::arrangeGrob(vals$umap_samps, vals$umap_kmeans, nrow=1),
           vals$umap_clusters, nrow=2)
       )
-      dev.off()
+      grDevices::dev.off()
     })
   
   output$umap_download_vals = downloadHandler(
@@ -478,12 +478,12 @@ app_server <- function(input, output, session) {
       
       totaler=data.frame(table(ids))
       k_df = data.frame(table(kmeans, ids))
-      k_mat = dcast(k_df, ids ~ kmeans)
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
       
       k_mat=k_mat[,-1]
       k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
       
-      pp=prcomp(k_add)
+      pp=stats::prcomp(k_add)
       plotter=data.frame(pp$x)
       colnames(plotter)=paste0("PC", 1:ncol(plotter))
       plotter$SampleID=totaler$ids
@@ -502,7 +502,7 @@ app_server <- function(input, output, session) {
       } else {
         plotter$Group=plotter$SampleID
       }
-      write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
     })
   
   output$umap_download_loading = downloadHandler(
@@ -515,15 +515,15 @@ app_server <- function(input, output, session) {
       
       totaler=data.frame(table(ids))
       k_df = data.frame(table(kmeans, ids))
-      k_mat = dcast(k_df, ids ~ kmeans)
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
       
       k_mat=k_mat[,-1]
       k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
       
-      pp=prcomp(k_add)
+      pp=stats::prcomp(k_add)
       plotter=data.frame(pp$rotation)
       
-      write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
+      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
     })
   
   
@@ -534,7 +534,7 @@ app_server <- function(input, output, session) {
       data_mat2=data_mat()[,-1]
       ids=data_mat()[,1]
       data_mat2=data.matrix(data_mat2)
-      mat = Rtsne(data_mat2, initial_dims=15, pca=TRUE, theta=1)$Y
+      mat = Rtsne::Rtsne(data_mat2, initial_dims=15, pca=TRUE, theta=1)$Y
       colnames(mat)=c("tSNE_1", "tSNE_2")
       mat
       
@@ -569,7 +569,7 @@ app_server <- function(input, output, session) {
     #  colors_samples2=c(rep("black", length(unique(plotter$Group))))
     #} 
     
-    gg=ggplot(sample(plotter), aes(tSNE_1, tSNE_2, color=Group)) +
+    gg=ggplot(sample(plotter), aes(.data$tSNE_1, .data$tSNE_2, color=.data$Group)) +
       geom_point() + theme_bw() +
       scale_color_manual(values=colors_samples2) +
       theme(axis.text=element_text(color='black', size=14),
@@ -591,7 +591,7 @@ app_server <- function(input, output, session) {
     
     plotter$Kmeans=as.character(kmeaner())
     
-    gg=ggplot(sample(plotter), aes(tSNE_1, tSNE_2, color=Kmeans)) +
+    gg=ggplot(sample(plotter), aes(.data$tSNE_1, .data$tSNE_2, color=.data$Kmeans)) +
       geom_point() + theme_bw() +
       scale_color_manual(values=colors_clusters()) +
       theme(axis.text=element_text(color='black', size=14),
@@ -606,13 +606,13 @@ app_server <- function(input, output, session) {
   output$tsne_download = downloadHandler(
     filename = 'TSNE_plots.png',
     content = function(file) {
-      png(file, width=input$download_width, height=input$download_height, units="in", res=200)
+      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
       print(
-        grid.arrange(
-          arrangeGrob(vals$tsne_samps, vals$tsne_kmeans, nrow=1),
+        gridExtra::grid.arrange(
+          gridExtra::arrangeGrob(vals$tsne_samps, vals$tsne_kmeans, nrow=1),
           vals$tsne_clusters, nrow=2)
       )
-      dev.off()
+      grDevices::dev.off()
     })
   
   output$tsne_download_vals = downloadHandler(
@@ -625,12 +625,12 @@ app_server <- function(input, output, session) {
       
       totaler=data.frame(table(ids))
       k_df = data.frame(table(kmeans, ids))
-      k_mat = dcast(k_df, ids ~ kmeans)
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
       
       k_mat=k_mat[,-1]
       k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
       
-      pp=prcomp(k_add)
+      pp=stats::prcomp(k_add)
       plotter=data.frame(pp$x)
       colnames(plotter)=paste0("PC", 1:ncol(plotter))
       plotter$SampleID=totaler$ids
@@ -649,7 +649,7 @@ app_server <- function(input, output, session) {
       } else {
         plotter$Group=plotter$SampleID
       }
-      write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
     })
   
   output$tsne_download_loading = downloadHandler(
@@ -662,15 +662,15 @@ app_server <- function(input, output, session) {
       
       totaler=data.frame(table(ids))
       k_df = data.frame(table(kmeans, ids))
-      k_mat = dcast(k_df, ids ~ kmeans)
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
       
       k_mat=k_mat[,-1]
       k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
       
-      pp=prcomp(k_add)
+      pp=stats::prcomp(k_add)
       plotter=data.frame(pp$rotation)
       
-      write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
+      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
     })
   
   #
@@ -698,7 +698,7 @@ app_server <- function(input, output, session) {
       } else {
         plotter$Group=plotter$SampleID
       }
-      write.table(plotter, file, sep='\t', quote=F, row.names=F)
+      utils::write.table(plotter, file, sep='\t', quote=F, row.names=F)
     })
   
   output$umap_coord_download = downloadHandler(
@@ -722,7 +722,7 @@ app_server <- function(input, output, session) {
       } else {
         plotter$Group=plotter$SampleID
       }
-      write.table(umap_coords(), file, sep='\t', quote=F, row.names=F)
+      utils::write.table(umap_coords(), file, sep='\t', quote=F, row.names=F)
     })
   
   output$tsne_coord_download = downloadHandler(
@@ -746,7 +746,7 @@ app_server <- function(input, output, session) {
       } else {
         plotter$Group=plotter$SampleID
       }
-      write.table(tsne_coords(), file, sep='\t', quote=F, row.names=F)
+      utils::write.table(tsne_coords(), file, sep='\t', quote=F, row.names=F)
     })
   
   
@@ -761,7 +761,7 @@ app_server <- function(input, output, session) {
     
     totaler=data.frame(table(ids))
     k_df = data.frame(table(kmeans, ids))
-    k_mat = dcast(k_df, ids ~ kmeans)
+    k_mat = reshape2::dcast(k_df, ids ~ kmeans)
     
     k_mat=k_mat[,-1]
     k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
@@ -790,13 +790,13 @@ app_server <- function(input, output, session) {
   
   output$composition_ui <- renderPlot({
     plotter=plotter_melt()
-    plotter_melt=melt(data=plotter, id.vars=c("SampleID", "Group"))
+    plotter_melt=reshape2::melt(data=plotter, id.vars=c("SampleID", "Group"))
     if(length(unique(plotter$Group))<nrow(plotter)){
       
       k_cols=length(unique(plotter_melt$Group))
       colors_use = c(colors_clusters()[1:k_cols], colors_samples)
       
-      g1=ggplot(plotter_melt, aes(SampleID, value, fill=variable)) + 
+      g1=ggplot(plotter_melt, aes(.data$SampleID, .data$value, fill=.data$variable)) + 
         #geom_tile(aes(x=SampleID,y=105,fill=Group, height=5), show.legend = F) +
         geom_col()+ scale_fill_manual(values=colors_clusters()) + theme_bw() +
         guides(fill = guide_legend("Cluster")) + ylab("Cluster Percentage %") +
@@ -805,7 +805,7 @@ app_server <- function(input, output, session) {
         facet_wrap(~Group, ncol=k_cols, scales="free")
     } else {
       
-      g1=ggplot(plotter_melt, aes(SampleID, value, fill=variable)) + 
+      g1=ggplot(plotter_melt, aes(.data$SampleID, .data$value, fill=.data$variable)) + 
         geom_col()+ scale_fill_manual(values=colors_clusters()) + theme_bw() +
         guides(fill = guide_legend("Cluster")) + ylab("Cluster Percentage %") +
         theme(axis.text=element_text(color='black', size=14),
@@ -820,17 +820,17 @@ app_server <- function(input, output, session) {
   output$comp_download = downloadHandler(
     filename = 'Composition_plot.pdf',
     content = function(file) {
-      pdf(file, width=input$download_width, height=input$download_height)
+      grDevices::pdf(file, width=input$download_width, height=input$download_height)
       print(vals$comp_plot)
-      dev.off()
+      grDevices::dev.off()
     })
   
   output$comp_download_table = downloadHandler(
     filename = 'Composition_table.txt',
     content = function(file) {
       plotter=plotter_melt()
-      plotter_melt=melt(data=plotter, id.vars=c("SampleID", "Group"))
-      write.table(plotter_melt, file=file, row.names=F, sep='\t', quote=F)
+      plotter_melt=reshape2::melt(data=plotter, id.vars=c("SampleID", "Group"))
+      utils::write.table(plotter_melt, file=file, row.names=F, sep='\t', quote=F)
     })
   
   output$click_info <- DT::renderDataTable(server = FALSE, {
@@ -938,42 +938,42 @@ app_server <- function(input, output, session) {
           colorer2[j]=colors_samples[j]
           names(colorer2)[j]=plotter_sub$Group[j]
         }
-        ha=columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
+        ha=ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
         
-        h1=grid.grabExpr(draw(
-          Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
+        h1=grid::grid.grabExpr(ComplexHeatmap::draw(
+          ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
                   top_annotation = ha,
                   heatmap_legend_param = list(title = "Scaled Value"),
                   cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                  column_names_gp = gpar(fontsize=7),
-                  row_names_gp = gpar(fontsize=10),
-                  row_title_gp = gpar(fontsize = 10),
+                  column_names_gp = grid::gpar(fontsize=7),
+                  row_names_gp = grid::gpar(fontsize=10),
+                  row_title_gp = grid::gpar(fontsize = 10),
                   row_names_max_width = unit(10,'cm'),
                   use_raster = T,
                   column_split=plotter_sub$Kmeans,
                   cluster_column_slices=F,
                   #column_split = splitter,
                   #left_annotation = ha,
-                  col = colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+                  col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
         ))
         
       } else {
         
-        h1=grid.grabExpr(draw(
-          Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
+        h1=grid::grid.grabExpr(ComplexHeatmap::draw(
+          ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
                   #top_annotation = ha,
                   heatmap_legend_param = list(title = "Scaled Value"),
                   cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                  column_names_gp = gpar(fontsize=7),
-                  row_names_gp = gpar(fontsize=10),
-                  row_title_gp = gpar(fontsize = 10),
+                  column_names_gp = grid::gpar(fontsize=7),
+                  row_names_gp = grid::gpar(fontsize=10),
+                  row_title_gp = grid::gpar(fontsize = 10),
                   row_names_max_width = unit(10,'cm'),
                   use_raster = T,
                   column_split=plotter_sub$Kmeans,
                   cluster_column_slices=F,
                   #column_split = splitter,
                   #left_annotation = ha,
-                  col = colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+                  col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
         ))
       }
       vals$marker_heat<-h1
@@ -984,37 +984,37 @@ app_server <- function(input, output, session) {
           colorer2[j]=colors_samples[j]
           names(colorer2)[j]=plotter_sub$Group[j]
         }
-        ha=columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
+        ha=ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
         
-        Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
+        ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
                 top_annotation = ha,
                 heatmap_legend_param = list(title = "Scaled Value"),
                 cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                column_names_gp = gpar(fontsize=7),
-                row_names_gp = gpar(fontsize=10),
-                row_title_gp = gpar(fontsize = 10),
+                column_names_gp = grid::gpar(fontsize=7),
+                row_names_gp = grid::gpar(fontsize=10),
+                row_title_gp = grid::gpar(fontsize = 10),
                 row_names_max_width = unit(10,'cm'),
                 use_raster = T,
                 column_split=plotter_sub$Kmeans,
                 cluster_column_slices=F,
                 #column_split = splitter,
                 #left_annotation = ha,
-                col = colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+                col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
       } else {
-        Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
+        ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
                 #top_annotation = ha,
                 heatmap_legend_param = list(title = "Scaled Value"),
                 cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                column_names_gp = gpar(fontsize=7),
-                row_names_gp = gpar(fontsize=10),
-                row_title_gp = gpar(fontsize = 10),
+                column_names_gp = grid::gpar(fontsize=7),
+                row_names_gp = grid::gpar(fontsize=10),
+                row_title_gp = grid::gpar(fontsize = 10),
                 row_names_max_width = unit(10,'cm'),
                 use_raster = T,
                 column_split=plotter_sub$Kmeans,
                 cluster_column_slices=F,
                 #column_split = splitter,
                 #left_annotation = ha,
-                col = colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+                col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
       }
     }, message="Generating heatmap")
   })
@@ -1022,9 +1022,9 @@ app_server <- function(input, output, session) {
   output$heat_download = downloadHandler(
     filename = 'marker_heatmap.pdf',
     content = function(file) {
-      pdf(file, width=input$download_width, height=input$download_height)
-      print(grid.arrange(vals$marker_heat))
-      dev.off()
+      grDevices::pdf(file, width=input$download_width, height=input$download_height)
+      print(gridExtra::grid.arrange(vals$marker_heat))
+      grDevices::dev.off()
     })
   
   
@@ -1057,7 +1057,7 @@ app_server <- function(input, output, session) {
         plotter$Feature=scale(plotter$Feature)
         
         output[[paste0('kk', i)]] <- renderPlot({
-          g1=ggplot(sample(plotter), aes(UMAP_1, UMAP_2, z=Feature)) +
+          g1=ggplot(sample(plotter), aes(.data$UMAP_1, .data$UMAP_2, z=.data$Feature)) +
             stat_summary_hex() + theme_void() + 
             ggtitle(paste0("Cluster C", i, "; ", input[[paste0('k', i)]])) +
             scale_fill_gradient(low='grey85', high="red3") +
@@ -1099,7 +1099,7 @@ app_server <- function(input, output, session) {
         plotter$Feature=data_mat2[,input[[paste0('k', i)]]]
         plotter$Feature=scale(plotter$Feature)
         glister[[i]]<-
-          ggplot(sample(plotter), aes(UMAP_1, UMAP_2, z=Feature)) +
+          ggplot(sample(plotter), aes(.data$UMAP_1, .data$UMAP_2, z=.data$Feature)) +
           stat_summary_hex() + theme_void() + 
           ggtitle(paste0("Cluster C", i, "; ", input[[paste0('k', i)]])) +
           scale_fill_gradient(low='grey85', high="red3") +
@@ -1163,9 +1163,9 @@ app_server <- function(input, output, session) {
   output$comp_feat_download = downloadHandler(
     filename = 'Composition_plot_features.pdf',
     content = function(file) {
-      pdf(file, width=input$download_width, height=input$download_height)
-      print(plot_grid(plotlist=glist(), ncol=3))
-      dev.off()
+      grDevices::pdf(file, width=input$download_width, height=input$download_height)
+      print(cowplot::plot_grid(plotlist=glist(), ncol=3))
+      grDevices::dev.off()
     })
   
   
@@ -1193,7 +1193,7 @@ app_server <- function(input, output, session) {
     }, message="Calculating DE stats")
   })
   
-  output$de_feats <- renderDT({
+  output$de_feats <- DT::renderDT({
     de_stats()
   })
   
@@ -1206,11 +1206,11 @@ app_server <- function(input, output, session) {
     ids=data_mat()[,1]
     data_mat2=data.matrix(data_mat2)
     
-    ggplot(feat_df, aes(avgLogFC, log10(adj_p_val+1))) + 
+    ggplot(feat_df, aes(.data$avgLogFC, log10(.data$adj_p_val+1))) + 
       geom_point(color='grey85', size=3) +
       scale_y_reverse() + ylab("-log10 adjusted p-value") +
-      geom_label_repel(data=good_feats, aes(avgLogFC, log10(adj_p_val+1), label=Feature)) +
-      geom_point(data=good_feats, aes(avgLogFC, log10(adj_p_val+1)), color='darkorange1', size=3) +
+      geom_label_repel(data=good_feats, aes(.data$avgLogFC, log10(.data$adj_p_val+1), label=.data$Feature)) +
+      geom_point(data=good_feats, aes(.data$avgLogFC, log10(.data$adj_p_val+1)), color='darkorange1', size=3) +
       geom_vline(xintercept = input$log_val, color="darkorange1") +
       geom_hline(yintercept = log10(input$p_val+1), color="darkorange1") +
       theme_bw() + 
@@ -1249,7 +1249,7 @@ app_server <- function(input, output, session) {
     
     
     
-    h_agg=aggregate(heat_data, by=list(plotter$Group, plotter$Kmeans), "mean")
+    h_agg=stats::aggregate(heat_data, by=list(plotter$Group, plotter$Kmeans), "mean")
     colnames(h_agg)[1:2] <- c("Group", "Kmeans")
     h_mat = data.matrix(h_agg[,3:ncol(h_agg)])
     h_mat=t(scale(t(h_mat)))
@@ -1261,7 +1261,7 @@ app_server <- function(input, output, session) {
         colorer[k]=colors_clusters()[k]
         names(colorer)[k]=h_agg[,"Kmeans"][k]
       }
-      ha=columnAnnotation(Kmeans=h_agg[,"Kmeans"],
+      ha=ComplexHeatmap::columnAnnotation(Kmeans=h_agg[,"Kmeans"],
                           col=list(Kmeans=colorer))
       splitter=h_agg$Group
     } else {
@@ -1270,24 +1270,24 @@ app_server <- function(input, output, session) {
         colorer2[j]=colors_samples[j]
         names(colorer2)[j]=h_agg[,"Group"][j]
       }
-      ha=columnAnnotation(Group=h_agg[,"Group"],
+      ha=ComplexHeatmap::columnAnnotation(Group=h_agg[,"Group"],
                           col=list(Group=colorer2))
       splitter=h_agg$Kmeans
     }
     
     
-    Heatmap(t(h_mat), show_row_names = T, show_column_names = F,
+    ComplexHeatmap::Heatmap(t(h_mat), show_row_names = T, show_column_names = F,
             top_annotation = ha,
             heatmap_legend_param = list(title = "Scaled Value"),
             cluster_rows = T, cluster_columns = T, #row_names_side = 'left',
-            column_names_gp = gpar(fontsize=12),
-            row_title_gp = gpar(fontsize = 10),
+            column_names_gp = grid::gpar(fontsize=12),
+            row_title_gp = grid::gpar(fontsize = 10),
             row_names_max_width = unit(10,'cm'),
             use_raster = T,
             #cluster_row_slices=F,
             column_split = splitter,
             #left_annotation = ha,
-            col = colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+            col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
     
     
   })
@@ -1306,14 +1306,14 @@ app_server <- function(input, output, session) {
       X = 1:nrow(x = data.use),
       FUN = function(x) {
         #return(min(2 * min(limma::rankSumTestWithCorrelation(index = j, statistics = data.use[x, ])), 1))
-        return(wilcox.test(data.use[x,cells.1], data.use[x,cells.2])$p.value)
+        return(stats::wilcox.test(data.use[x,cells.1], data.use[x,cells.2])$p.value)
       }
     )
     
     foldB=rowMeans(data.use[,cells.2])
     foldA=rowMeans(data.use[,cells.1])
     avgLogFC=(foldB-foldA)/(foldA)
-    adj_p_val=p.adjust(p_val, method="BH")
+    adj_p_val=stats::p.adjust(p_val, method="BH")
     return(data.frame(Feature=rownames(x = data.use), avgLogFC, p_val, adj_p_val))
     
   }
