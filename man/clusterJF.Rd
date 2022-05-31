@@ -20,9 +20,9 @@ clusterJF(clustered_data, ...)
 
 \item{...}{Other objects passed along to functions within clusterJF}
 
-\item{ids}{Character vector of ids for each row in `clustered_data$x`, corresponding to SampleID in `meta`}
+\item{ids}{Character vector of ids for each row in `clustered_data$x`, corresponding to labels in `meta`}
 
-\item{meta}{Data frame containing metadata, with SampleID in the first column and Group label in the second column}
+\item{meta}{Character vector containing metadata labels, corresponding to ids}
 
 \item{colors}{Vector of colors for each group}
 

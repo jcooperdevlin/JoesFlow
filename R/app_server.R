@@ -654,120 +654,18 @@ app_server <- function(input, output, session) {
   ##### Markers #####
   output$marker_heat <- renderPlot({
     withProgress({
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      
-      plotter=data.frame(SampleID=ids)
-      
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-        
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-          
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      
-      plotter$Kmeans=as.character(kmeaner())
-      
-      samp_samp=sample(1:nrow(plotter), 500)
-      
-      plotter_sub=plotter[samp_samp,]
-      data_mat2_sub=data_mat2[samp_samp,]
-      
-      print(dim(plotter_sub))
-      
-      if(length(unique(plotter$Group))<length(unique(plotter$SampleID))){
-        colorer2=c()
-        for(j in 1:length(plotter_sub$Group)){
-          colorer2[j]=colors_samples[j]
-          names(colorer2)[j]=plotter_sub$Group[j]
-        }
-        ha=ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
-        
-        h1=grid::grid.grabExpr(ComplexHeatmap::draw(
-          ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
-                                  top_annotation = ha,
-                                  heatmap_legend_param = list(title = "Scaled Value"),
-                                  cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                                  column_names_gp = grid::gpar(fontsize=7),
-                                  row_names_gp = grid::gpar(fontsize=10),
-                                  row_title_gp = grid::gpar(fontsize = 10),
-                                  row_names_max_width = unit(10,'cm'),
-                                  use_raster = T,
-                                  column_split=plotter_sub$Kmeans,
-                                  cluster_column_slices=F,
-                                  #column_split = splitter,
-                                  #left_annotation = ha,
-                                  col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-        ))
-        
-      } else {
-        
-        h1=grid::grid.grabExpr(ComplexHeatmap::draw(
-          ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
-                                  #top_annotation = ha,
-                                  heatmap_legend_param = list(title = "Scaled Value"),
-                                  cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                                  column_names_gp = grid::gpar(fontsize=7),
-                                  row_names_gp = grid::gpar(fontsize=10),
-                                  row_title_gp = grid::gpar(fontsize = 10),
-                                  row_names_max_width = unit(10,'cm'),
-                                  use_raster = T,
-                                  column_split=plotter_sub$Kmeans,
-                                  cluster_column_slices=F,
-                                  #column_split = splitter,
-                                  #left_annotation = ha,
-                                  col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-        ))
-      }
-      vals$marker_heat<-h1
-      
-      if(length(unique(plotter$Group))<length(unique(plotter$SampleID))){
-        colorer2=c()
-        for(j in 1:length(plotter_sub$Group)){
-          colorer2[j]=colors_samples[j]
-          names(colorer2)[j]=plotter_sub$Group[j]
-        }
-        ha=ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
-        
-        ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
-                                top_annotation = ha,
-                                heatmap_legend_param = list(title = "Scaled Value"),
-                                cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                                column_names_gp = grid::gpar(fontsize=7),
-                                row_names_gp = grid::gpar(fontsize=10),
-                                row_title_gp = grid::gpar(fontsize = 10),
-                                row_names_max_width = unit(10,'cm'),
-                                use_raster = T,
-                                column_split=plotter_sub$Kmeans,
-                                cluster_column_slices=F,
-                                #column_split = splitter,
-                                #left_annotation = ha,
-                                col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-      } else {
-        ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
-                                #top_annotation = ha,
-                                heatmap_legend_param = list(title = "Scaled Value"),
-                                cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                                column_names_gp = grid::gpar(fontsize=7),
-                                row_names_gp = grid::gpar(fontsize=10),
-                                row_title_gp = grid::gpar(fontsize = 10),
-                                row_names_max_width = unit(10,'cm'),
-                                use_raster = T,
-                                column_split=plotter_sub$Kmeans,
-                                cluster_column_slices=F,
-                                #column_split = splitter,
-                                #left_annotation = ha,
-                                col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-      }
+      h1 <- marker_heatJF(  sample_data = data_mat()[,-1],
+                                    ids = data_mat()[,1],
+                                   meta = meta_mat()[,input$meta_val],
+                          kmeans_groups = kmeaner(),
+                                 colors = colors_samples,
+                            sample_size = 500)
+
+      vals$marker_heat <-h1 %>%
+        ComplexHeatmap::draw() %>%
+        grid::grid.grabExpr()
+
+      h1      
     }, message="Generating heatmap")
   })
   

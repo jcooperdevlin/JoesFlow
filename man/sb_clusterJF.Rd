@@ -2,16 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{sb_clusterJF}
 \alias{sb_clusterJF}
-\title{Plot a sample based cluster for JoesFlow}
+\title{Sample-based PCA for JoesFlow}
 \usage{
 sb_clusterJF(clustered_data, ids, meta, colors1, colors2)
 }
 \arguments{
-\item{clustered_data}{Object containing clustered data (expects output from `prcomp` or `uamp`)}
+\item{clustered_data}{Object containing clustered data (expects output from `prcomp` or `umap`)}
 
-\item{ids}{Character vector of ids for each row in `clustered_data$x`, corresponding to SampleID in `meta`}
+\item{ids}{Character vector of ids for each row in `clustered_data$x`, corresponding to labels in `meta`}
 
-\item{meta}{Data frame containing metadata, with SampleID in the first column and Group label in the second column}
+\item{meta}{Character vector containing metadata labels, corresponding to ids}
 
 \item{colors1}{Vector of colors for samples}
 
@@ -21,5 +21,5 @@ sb_clusterJF(clustered_data, ids, meta, colors1, colors2)
 A ggplot object
 }
 \description{
-Plot a sample based cluster for JoesFlow
+Sample-based PCA for JoesFlow
 }
