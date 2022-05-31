@@ -13,7 +13,37 @@ app_server <- function(input, output, session) {
   
   vals <- reactiveValues()
   
-  #colors
+  ##### Options #####
+  
+  # Upload::choose flow file
+  data_mat <- reactive({
+    inFile <- input$file1
+    
+    if (is.null(inFile))
+      return(NULL)
+    
+    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
+    if(input$subsample<1){
+      tt=tt[sample(rownames(tt), nrow(tt)*input$subsample),]
+    }
+    
+    tt
+    
+  })
+  
+  # Upload::choose metadata file
+  meta_mat <- reactive({
+    inFile <- input$file2
+    
+    if (is.null(inFile))
+      return(NULL)
+    
+    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
+    tt
+    
+  })
+  
+  # Visualize::colors
   output$col_pal <- renderUI({
     col_pals=c("Default",
                "Blues", "BuGn", "BuPu", "GnBu", "Greens", "Greys", "Oranges", 
@@ -42,31 +72,36 @@ app_server <- function(input, output, session) {
     colors_sel
   })
   
-  data_mat <- reactive({
-    inFile <- input$file1
+  # Visualize::meta-data group variable
+  output$meta_sel <- renderUI({
+    msel=colnames(meta_mat())
     
-    if (is.null(inFile))
-      return(NULL)
-    
-    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
-    if(input$subsample<1){
-      tt=tt[sample(rownames(tt), nrow(tt)*input$subsample),]
-    }
-    
-    tt
-    
+    selectInput("meta_val", "Group variable",
+                choices=msel)
   })
   
-  meta_mat <- reactive({
-    inFile <- input$file2
+  # Visualize::number of clusters
+  output$select_k <- renderUI({
+    sels=unique(as.character(kmeaner()))
     
-    if (is.null(inFile))
-      return(NULL)
-    
-    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
-    tt
-    
+    selectInput("k_val", "Select cluster",
+                choices=sels)
   })
+  
+  # Visualize::clustering method
+  output$cluster_setting<-renderUI({
+    sliderInput("kmean",
+                "Number of clusters:",
+                value = 5,
+                min = 1,
+                max = 20)
+  })
+  
+  # Visualize::Download height
+  # Visualize::Download width
+  
+  
+  ##### Data input tables #####
   
   output$metadata <- DT::renderDT({
     meta_mat()
@@ -76,31 +111,9 @@ app_server <- function(input, output, session) {
     data_mat()
   })
   
-  output$feats_distr <- renderPlot({
-    data_mat2=data_mat()[,-1]
-    data_mat2=data.matrix(data_mat2)
-    
-    vars=matrixStats::colVars(data_mat2)
-    sds=matrixStats::colSds(data_mat2)
-    means=colSums(data_mat2)
-    
-    plotter=data.frame(Feature=colnames(data_mat2), vars, sds, means)
-    
-    labels=data.frame(Feature=colnames(data_mat2), xPos=max(means), yPos=max((stats::density(means))$y))
-    g1=ggplot(plotter, aes(means)) + geom_density(color='dodgerblue2') + theme_minimal() + 
-      xlab("Feature Mean") + ylab("Density") +
-      geom_vline(xintercept = input$mean_cutoff, color="black", size=3)
-    g2=ggplot(plotter, aes(sds)) + geom_density(color='red3') + theme_minimal() + 
-      xlab("Feature SD") + ylab("Density") +
-      geom_vline(xintercept = input$SD_cutoff, color="black", size=3)
-    g3=ggplot(plotter, aes(vars)) + geom_density(color='darkorange1') + theme_minimal() + 
-      xlab("Feature Variance") + ylab("Density") +
-      geom_vline(xintercept = input$var_cutoff, color="black", size=3)
-    
-    gridExtra::grid.arrange(g1,g2,g3)
-    
-  }, height=500)
   
+  ##### Features Figures #####
+
   output$feats_plot = renderPlot({
     data_mat2=data_mat()[,-1]
     data_mat2=data.matrix(data_mat2)
@@ -175,41 +188,28 @@ app_server <- function(input, output, session) {
       )
       grDevices::dev.off()
     })
-  
-  
-  output$meta_sel <- renderUI({
-    msel=colnames(meta_mat())
-    
-    selectInput("meta_val", "Group variable",
-                choices=msel)
+
+  ##### Kmeans #####
+  kmeaner<-reactive({
+    withProgress({
+      data_mat2=data_mat()[,-1]
+      ids=data_mat()[,1]
+      data_mat2=data.matrix(data_mat2)
+      if(input$clust_type=="Kmeans"){
+        kmeaner=kmeans(data_mat2, input$kmean)
+        kk=paste0("C", kmeaner$cluster)
+      } else {
+        hc <- fastcluster::hclust(stats::dist(data_mat2)^2, "cen")
+        memb <- stats::cutree(hc, k = input$kmean)
+        kk=paste0("C", as.character(memb))
+      }
+
+      kk
+    }, message = "Calculating clusters")
   })
   
   
-  output$select_k <- renderUI({
-    sels=unique(as.character(kmeaner()))
-    
-    selectInput("k_val", "Select cluster",
-                choices=sels)
-  })
-  
-  output$select_p <- renderUI({
-    numericInput("p_val",
-                 "Select p-value cutoff",
-                 value = 0.05,
-                 min = 0, step=0.05,
-                 max = 1)
-  })
-  
-  output$select_l <- renderUI({
-    numericInput("log_val",
-                 "Select log2 fold change cutoff",
-                 value = 1, step=0.5,
-                 min = -10,
-                 max = 100)
-  })
-  
-  
-  # PCA analysis
+  ##### PCA analysis #####
   pca_coords<-reactive({
     withProgress({
 
@@ -259,6 +259,7 @@ app_server <- function(input, output, session) {
     
     list(pp = pp, groups_table = groups_table)
   })
+  
   # generate the figures
   samp_pca <- reactive({
     
@@ -282,78 +283,7 @@ app_server <- function(input, output, session) {
     print(samp_pca())
   })
   
-  
-  
-  output$pca_download = downloadHandler(
-    filename = 'PCA_plots.png',
-    content = function(file) {
-      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
-      print(
-        gridExtra::grid.arrange(
-          gridExtra::arrangeGrob(vals$pca_samps, vals$pca_kmeans, nrow=1),
-          vals$pca_clusters, nrow=2)
-      )
-      grDevices::dev.off()
-    })
-  
-  output$pca_download_vals = downloadHandler(
-    filename = 'sample_PCA_values.txt',
-    content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-      
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$x)
-      colnames(plotter)=paste0("PC", 1:ncol(plotter))
-      plotter$SampleID=totaler$ids
-      
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-        
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-          
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
-    })
-  
-  output$pca_download_loading = downloadHandler(
-    filename = 'sample_PCA_loadings.txt',
-    content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-      
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-      
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$rotation)
-      
-      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
-    })
-  
-  
+  ##### UMAP #####
   umap_coords<-reactive({
     withProgress({
       
@@ -370,89 +300,15 @@ app_server <- function(input, output, session) {
       clusterJF(ids = data_mat()[,1],
                 meta = meta_mat()[,2],
                 colors = colors_samples)
-
+    
     vals$umap_samps<-gg
     
     print(gg)
     
   })
   
-  output$cluster_setting<-renderUI({
-    #if(input$clust_type=="Kmeans"){
-    sliderInput("kmean",
-                "Number of clusters:",
-                value = 5,
-                min = 1,
-                max = 20)
-    #} else {
-    #  sliderInput("mean_shift",
-    #              "Number of neighbors:",
-    #              value = round(0.75*nrow(data_mat())),
-    #              min = 100,
-    #              max = nrow(data_mat()))
-    #}
-    #graph based is too slow
-    #else {
-    #  sliderInput("graph_k",
-    #              "Number of neighbors:",
-    #              value = 25,
-    #              min = 5,
-    #              max = 100)
-    #}
-    
-  })
-  
-  kmeaner<-reactive({
-    withProgress({
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      if(input$clust_type=="Kmeans"){
-        kmeaner=kmeans(data_mat2, input$kmean)
-        kk=paste0("C", kmeaner$cluster)
-      } else {
-        hc <- fastcluster::hclust(stats::dist(data_mat2)^2, "cen")
-        memb <- stats::cutree(hc, k = input$kmean)
-        kk=paste0("C", as.character(memb))
-        
-        #print(dim(data_mat2))
-        #res=msClustering( t(data_mat2), h=input$mean_shift)
-        #kk=paste0("C", as.character(res$labels))
-        
-        #classification <- meanShift(data_mat2, alpha=1, iterations=5,
-        #                            algorithm="KDTREE", 
-        #                            nNeighbor=input$mean_shift)
-        #kk=paste0("C", as.character(classification$assignment))
-        
-      }
-      
-      #else {
-      #  
-      #  knn.info <- RANN::nn2(data_mat2, k=input$graph_k)
-      #
-      #  mat=t(data_mat2)
-      #  ## convert to adjacancy matrix
-      #  knn <- knn.info$nn.idx
-      #  adj <- matrix(0, ncol(mat), ncol(mat))
-      #  rownames(adj) <- colnames(adj) <- colnames(mat)
-      #  for(i in seq_len(ncol(mat))) {
-      #    adj[i,colnames(mat)[knn[i,]]] <- 1
-      #  }
-      #
-      #  ## convert to graph
-      #  g <- igraph::graph.adjacency(adj, mode="undirected")
-      #  g <- simplify(g) ## remove self loops
-      
-      #  ## identify communities
-      #  km <- igraph::cluster_louvain(g)
-      #  kk=paste0("C", km$membership)
-      #}
-      kk
-    }, message = "Calculating clusters")
-  })
-  
   output$umap_k_plot = renderPlot({
-
+    
     gg <- umap_coords() %>%
       clusterJF(ids = 1:nrow(data_mat()),
                 meta = kmeaner(),
@@ -464,78 +320,7 @@ app_server <- function(input, output, session) {
     print(gg)
   })
   
-  output$umap_download = downloadHandler(
-    filename = 'UMAP_plots.png',
-    content = function(file) {
-      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
-      print(
-        gridExtra::grid.arrange(
-          gridExtra::arrangeGrob(vals$umap_samps, vals$umap_kmeans, nrow=1),
-          vals$umap_clusters, nrow=2)
-      )
-      grDevices::dev.off()
-    })
-  
-  output$umap_download_vals = downloadHandler(
-    filename = 'sample_PCA_values.txt',
-    content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-      
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-      
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$x)
-      colnames(plotter)=paste0("PC", 1:ncol(plotter))
-      plotter$SampleID=totaler$ids
-      
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-        
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-          
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
-    })
-  
-  output$umap_download_loading = downloadHandler(
-    filename = 'sample_PCA_loadings.txt',
-    content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-      
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-      
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$rotation)
-      
-      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
-    })
-  
-  
-  ###tsne
+  ##### TSNE #####
   
   tsne_coords<-reactive({
     withProgress({
@@ -573,9 +358,6 @@ app_server <- function(input, output, session) {
     }
     
     colors_samples2=colors_samples
-    #if(min(table(plotter$Group))<2){
-    #  colors_samples2=c(rep("black", length(unique(plotter$Group))))
-    #} 
     
     gg=ggplot(sample(plotter), aes(.data$tSNE_1, .data$tSNE_2, color=.data$Group)) +
       geom_point() + theme_bw() +
@@ -611,155 +393,8 @@ app_server <- function(input, output, session) {
     
   })
   
-  output$tsne_download = downloadHandler(
-    filename = 'TSNE_plots.png',
-    content = function(file) {
-      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
-      print(
-        gridExtra::grid.arrange(
-          gridExtra::arrangeGrob(vals$tsne_samps, vals$tsne_kmeans, nrow=1),
-          vals$tsne_clusters, nrow=2)
-      )
-      grDevices::dev.off()
-    })
   
-  output$tsne_download_vals = downloadHandler(
-    filename = 'sample_PCA_values.txt',
-    content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-      
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-      
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$x)
-      colnames(plotter)=paste0("PC", 1:ncol(plotter))
-      plotter$SampleID=totaler$ids
-      
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-        
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-          
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
-    })
-  
-  output$tsne_download_loading = downloadHandler(
-    filename = 'sample_PCA_loadings.txt',
-    content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-      
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-      
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$rotation)
-      
-      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
-    })
-  
-  #
-  #
-  #
-  
-  output$pca_coord_download = downloadHandler(
-    filename = 'PCA_coords.txt',
-    content = function(file) {
-      pp=pca_coords()
-      ids=data_mat()[,1]
-      plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=ids)
-      plotter$Kmeans=as.character(kmeaner())
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-        
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-          
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(plotter, file, sep='\t', quote=F, row.names=F)
-    })
-  
-  output$umap_coord_download = downloadHandler(
-    filename = 'UMAP_coords.txt',
-    content = function(file) {
-      pp=umap_coords()
-      ids=data_mat()[,1]
-      plotter=data.frame(pp, SampleID=ids)
-      plotter$Kmeans=as.character(kmeaner())
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-        
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-          
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(umap_coords(), file, sep='\t', quote=F, row.names=F)
-    })
-  
-  output$tsne_coord_download = downloadHandler(
-    filename = 'TSNE_coords.txt',
-    content = function(file) {
-      pp=tsne_coords()
-      ids=data_mat()[,1]
-      plotter=data.frame(pp, SampleID=ids)
-      plotter$Kmeans=as.character(kmeaner())
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-        
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-          
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(tsne_coords(), file, sep='\t', quote=F, row.names=F)
-    })
-  
-  
-  
-  ##composition
+  ##### Composition #####
   
   plotter_melt <- reactive({
     data_mat2=data_mat()[,-1]
@@ -825,22 +460,6 @@ app_server <- function(input, output, session) {
     
   })
   
-  output$comp_download = downloadHandler(
-    filename = 'Composition_plot.pdf',
-    content = function(file) {
-      grDevices::pdf(file, width=input$download_width, height=input$download_height)
-      print(vals$comp_plot)
-      grDevices::dev.off()
-    })
-  
-  output$comp_download_table = downloadHandler(
-    filename = 'Composition_table.txt',
-    content = function(file) {
-      plotter=plotter_melt()
-      plotter_melt=reshape2::melt(data=plotter, id.vars=c("SampleID", "Group"))
-      utils::write.table(plotter_melt, file=file, row.names=F, sep='\t', quote=F)
-    })
-  
   output$click_info <- DT::renderDataTable(server = FALSE, {
     # Because it's a ggplot2, we don't need to supply xvar or yvar; if this
     # were a base graphics plot, we'd need those.
@@ -900,141 +519,6 @@ app_server <- function(input, output, session) {
   
   class = "display"
   )
-  
-  #output$brush_info <- renderPrint({
-  #  plotter=plotter_melt()
-  #  plotter_melt=melt(data=plotter, id.vars=c("SampleID", "Group"))
-  #  brushedPoints(plotter_melt, input$plot1_brush)
-  #})
-  
-  
-  output$marker_heat <- renderPlot({
-    withProgress({
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      
-      plotter=data.frame(SampleID=ids)
-      
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-        
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-          
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      
-      plotter$Kmeans=as.character(kmeaner())
-      
-      samp_samp=sample(1:nrow(plotter), 500)
-      
-      plotter_sub=plotter[samp_samp,]
-      data_mat2_sub=data_mat2[samp_samp,]
-      
-      print(dim(plotter_sub))
-      
-      if(length(unique(plotter$Group))<length(unique(plotter$SampleID))){
-        colorer2=c()
-        for(j in 1:length(plotter_sub$Group)){
-          colorer2[j]=colors_samples[j]
-          names(colorer2)[j]=plotter_sub$Group[j]
-        }
-        ha=ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
-        
-        h1=grid::grid.grabExpr(ComplexHeatmap::draw(
-          ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
-                  top_annotation = ha,
-                  heatmap_legend_param = list(title = "Scaled Value"),
-                  cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                  column_names_gp = grid::gpar(fontsize=7),
-                  row_names_gp = grid::gpar(fontsize=10),
-                  row_title_gp = grid::gpar(fontsize = 10),
-                  row_names_max_width = unit(10,'cm'),
-                  use_raster = T,
-                  column_split=plotter_sub$Kmeans,
-                  cluster_column_slices=F,
-                  #column_split = splitter,
-                  #left_annotation = ha,
-                  col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-        ))
-        
-      } else {
-        
-        h1=grid::grid.grabExpr(ComplexHeatmap::draw(
-          ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
-                  #top_annotation = ha,
-                  heatmap_legend_param = list(title = "Scaled Value"),
-                  cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                  column_names_gp = grid::gpar(fontsize=7),
-                  row_names_gp = grid::gpar(fontsize=10),
-                  row_title_gp = grid::gpar(fontsize = 10),
-                  row_names_max_width = unit(10,'cm'),
-                  use_raster = T,
-                  column_split=plotter_sub$Kmeans,
-                  cluster_column_slices=F,
-                  #column_split = splitter,
-                  #left_annotation = ha,
-                  col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-        ))
-      }
-      vals$marker_heat<-h1
-      
-      if(length(unique(plotter$Group))<length(unique(plotter$SampleID))){
-        colorer2=c()
-        for(j in 1:length(plotter_sub$Group)){
-          colorer2[j]=colors_samples[j]
-          names(colorer2)[j]=plotter_sub$Group[j]
-        }
-        ha=ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
-        
-        ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
-                top_annotation = ha,
-                heatmap_legend_param = list(title = "Scaled Value"),
-                cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                column_names_gp = grid::gpar(fontsize=7),
-                row_names_gp = grid::gpar(fontsize=10),
-                row_title_gp = grid::gpar(fontsize = 10),
-                row_names_max_width = unit(10,'cm'),
-                use_raster = T,
-                column_split=plotter_sub$Kmeans,
-                cluster_column_slices=F,
-                #column_split = splitter,
-                #left_annotation = ha,
-                col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-      } else {
-        ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
-                #top_annotation = ha,
-                heatmap_legend_param = list(title = "Scaled Value"),
-                cluster_rows = T, cluster_columns = T, row_names_side = 'left',
-                column_names_gp = grid::gpar(fontsize=7),
-                row_names_gp = grid::gpar(fontsize=10),
-                row_title_gp = grid::gpar(fontsize = 10),
-                row_names_max_width = unit(10,'cm'),
-                use_raster = T,
-                column_split=plotter_sub$Kmeans,
-                cluster_column_slices=F,
-                #column_split = splitter,
-                #left_annotation = ha,
-                col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-      }
-    }, message="Generating heatmap")
-  })
-  
-  output$heat_download = downloadHandler(
-    filename = 'marker_heatmap.pdf',
-    content = function(file) {
-      grDevices::pdf(file, width=input$download_width, height=input$download_height)
-      print(gridExtra::grid.arrange(vals$marker_heat))
-      grDevices::dev.off()
-    })
-  
   
   observe({
     if(input$feat_dim=="PCA" | input$feat_dim=="UMAP" | input$feat_dim=="tSNE"){
@@ -1118,7 +602,6 @@ app_server <- function(input, output, session) {
     glister
   })
   
-  
   output$comp_ui <- renderUI({
     data_mat2=data_mat()[,-1]
     ids=data_mat()[,1]
@@ -1144,8 +627,7 @@ app_server <- function(input, output, session) {
       }
       which2select=c(which2select, as.character(orderer$Feature[1]))
     }
-    
-    
+
     plot_output_list<-lapply(1:howmanyrows, function(m) {
       mult1=(3*m)-2
       mult2=(3*m)-1
@@ -1168,6 +650,423 @@ app_server <- function(input, output, session) {
     do.call(tagList, plot_output_list)
   })
   
+    
+  ##### Markers #####
+  output$marker_heat <- renderPlot({
+    withProgress({
+      data_mat2=data_mat()[,-1]
+      ids=data_mat()[,1]
+      data_mat2=data.matrix(data_mat2)
+      
+      plotter=data.frame(SampleID=ids)
+      
+      if(length(input$meta_val)>0){
+        grouper=meta_mat()[,input$meta_val]
+        
+        plotter$Group=as.character(plotter$SampleID)
+        samps=as.character(unique(plotter$SampleID))
+        for(jj in 1:length(samps)){
+          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=as.character(grouper[,input$meta_val][1])
+          
+          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
+        }
+      } else {
+        plotter$Group=plotter$SampleID
+      }
+      
+      plotter$Kmeans=as.character(kmeaner())
+      
+      samp_samp=sample(1:nrow(plotter), 500)
+      
+      plotter_sub=plotter[samp_samp,]
+      data_mat2_sub=data_mat2[samp_samp,]
+      
+      print(dim(plotter_sub))
+      
+      if(length(unique(plotter$Group))<length(unique(plotter$SampleID))){
+        colorer2=c()
+        for(j in 1:length(plotter_sub$Group)){
+          colorer2[j]=colors_samples[j]
+          names(colorer2)[j]=plotter_sub$Group[j]
+        }
+        ha=ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
+        
+        h1=grid::grid.grabExpr(ComplexHeatmap::draw(
+          ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
+                                  top_annotation = ha,
+                                  heatmap_legend_param = list(title = "Scaled Value"),
+                                  cluster_rows = T, cluster_columns = T, row_names_side = 'left',
+                                  column_names_gp = grid::gpar(fontsize=7),
+                                  row_names_gp = grid::gpar(fontsize=10),
+                                  row_title_gp = grid::gpar(fontsize = 10),
+                                  row_names_max_width = unit(10,'cm'),
+                                  use_raster = T,
+                                  column_split=plotter_sub$Kmeans,
+                                  cluster_column_slices=F,
+                                  #column_split = splitter,
+                                  #left_annotation = ha,
+                                  col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+        ))
+        
+      } else {
+        
+        h1=grid::grid.grabExpr(ComplexHeatmap::draw(
+          ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
+                                  #top_annotation = ha,
+                                  heatmap_legend_param = list(title = "Scaled Value"),
+                                  cluster_rows = T, cluster_columns = T, row_names_side = 'left',
+                                  column_names_gp = grid::gpar(fontsize=7),
+                                  row_names_gp = grid::gpar(fontsize=10),
+                                  row_title_gp = grid::gpar(fontsize = 10),
+                                  row_names_max_width = unit(10,'cm'),
+                                  use_raster = T,
+                                  column_split=plotter_sub$Kmeans,
+                                  cluster_column_slices=F,
+                                  #column_split = splitter,
+                                  #left_annotation = ha,
+                                  col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+        ))
+      }
+      vals$marker_heat<-h1
+      
+      if(length(unique(plotter$Group))<length(unique(plotter$SampleID))){
+        colorer2=c()
+        for(j in 1:length(plotter_sub$Group)){
+          colorer2[j]=colors_samples[j]
+          names(colorer2)[j]=plotter_sub$Group[j]
+        }
+        ha=ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colorer2))
+        
+        ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
+                                top_annotation = ha,
+                                heatmap_legend_param = list(title = "Scaled Value"),
+                                cluster_rows = T, cluster_columns = T, row_names_side = 'left',
+                                column_names_gp = grid::gpar(fontsize=7),
+                                row_names_gp = grid::gpar(fontsize=10),
+                                row_title_gp = grid::gpar(fontsize = 10),
+                                row_names_max_width = unit(10,'cm'),
+                                use_raster = T,
+                                column_split=plotter_sub$Kmeans,
+                                cluster_column_slices=F,
+                                #column_split = splitter,
+                                #left_annotation = ha,
+                                col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+      } else {
+        ComplexHeatmap::Heatmap(scale(t(data_mat2_sub)), show_row_names = T, show_column_names = F,
+                                #top_annotation = ha,
+                                heatmap_legend_param = list(title = "Scaled Value"),
+                                cluster_rows = T, cluster_columns = T, row_names_side = 'left',
+                                column_names_gp = grid::gpar(fontsize=7),
+                                row_names_gp = grid::gpar(fontsize=10),
+                                row_title_gp = grid::gpar(fontsize = 10),
+                                row_names_max_width = unit(10,'cm'),
+                                use_raster = T,
+                                column_split=plotter_sub$Kmeans,
+                                cluster_column_slices=F,
+                                #column_split = splitter,
+                                #left_annotation = ha,
+                                col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
+      }
+    }, message="Generating heatmap")
+  })
+  
+  ##### Downloads #####
+  
+  ## PCA ##
+  output$pca_download = downloadHandler(
+    filename = 'PCA_plots.png',
+    content = function(file) {
+      ggsave(file, plot = {(vals$pca_samps + vals$pca_kmeans) / vals$pca_clusters},
+             width = input$download_width, height = input$download_height, units = "in")
+    })
+  
+  output$pca_coord_download = downloadHandler(
+    filename = 'PCA_coords.txt',
+    content = function(file) {
+      pp=pca_coords()
+      ids=data_mat()[,1]
+      plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=ids)
+      plotter$Kmeans=as.character(kmeaner())
+      if(length(input$meta_val)>0){
+        grouper=meta_mat()[,input$meta_val]
+        
+        plotter$Group=as.character(plotter$SampleID)
+        samps=as.character(unique(plotter$SampleID))
+        for(jj in 1:length(samps)){
+          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=as.character(grouper[,input$meta_val][1])
+          
+          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
+        }
+      } else {
+        plotter$Group=plotter$SampleID
+      }
+      utils::write.table(plotter, file, sep='\t', quote=F, row.names=F)
+    })
+  
+  ## Sample-based PCA ##
+  sb_pca_download <- reactive({
+    
+  })
+  
+  output$pca_download_vals = downloadHandler(
+    filename = 'sample_PCA_values.txt',
+    content = function(file) {
+      data_mat2=data_mat()[,-1]
+      ids=data_mat()[,1]
+      data_mat2=data.matrix(data_mat2)
+      kmeans=as.character(kmeaner())
+      
+      totaler=data.frame(table(ids))
+      k_df = data.frame(table(kmeans, ids))
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
+      
+      k_mat=k_mat[,-1]
+      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
+      pp=stats::prcomp(k_add)
+      plotter=data.frame(pp$x)
+      colnames(plotter)=paste0("PC", 1:ncol(plotter))
+      plotter$SampleID=totaler$ids
+      
+      if(length(input$meta_val)>0){
+        grouper=meta_mat()[,input$meta_val]
+        
+        plotter$Group=as.character(plotter$SampleID)
+        samps=as.character(unique(plotter$SampleID))
+        for(jj in 1:length(samps)){
+          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=as.character(grouper[,input$meta_val][1])
+          
+          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
+        }
+      } else {
+        plotter$Group=plotter$SampleID
+      }
+      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+    })
+  
+  output$pca_download_loading = downloadHandler(
+    filename = 'sample_PCA_loadings.txt',
+    content = function(file) {
+      data_mat2=data_mat()[,-1]
+      ids=data_mat()[,1]
+      data_mat2=data.matrix(data_mat2)
+      kmeans=as.character(kmeaner())
+      
+      totaler=data.frame(table(ids))
+      k_df = data.frame(table(kmeans, ids))
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
+      
+      k_mat=k_mat[,-1]
+      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
+      
+      pp=stats::prcomp(k_add)
+      plotter=data.frame(pp$rotation)
+      
+      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
+    })
+  
+  ## UMAP ##
+  output$umap_download = downloadHandler(
+    filename = 'UMAP_plots.png',
+    content = function(file) {
+      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
+      print(
+        gridExtra::grid.arrange(
+          gridExtra::arrangeGrob(vals$umap_samps, vals$umap_kmeans, nrow=1),
+          vals$umap_clusters, nrow=2)
+      )
+      grDevices::dev.off()
+    })
+  
+  output$umap_coord_download = downloadHandler(
+    filename = 'UMAP_coords.txt',
+    content = function(file) {
+      pp=umap_coords()
+      ids=data_mat()[,1]
+      plotter=data.frame(pp, SampleID=ids)
+      plotter$Kmeans=as.character(kmeaner())
+      if(length(input$meta_val)>0){
+        grouper=meta_mat()[,input$meta_val]
+        
+        plotter$Group=as.character(plotter$SampleID)
+        samps=as.character(unique(plotter$SampleID))
+        for(jj in 1:length(samps)){
+          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=as.character(grouper[,input$meta_val][1])
+          
+          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
+        }
+      } else {
+        plotter$Group=plotter$SampleID
+      }
+      utils::write.table(umap_coords(), file, sep='\t', quote=F, row.names=F)
+    })
+  
+  output$umap_download_vals = downloadHandler(
+    filename = 'sample_PCA_values.txt',
+    content = function(file) {
+      data_mat2=data_mat()[,-1]
+      ids=data_mat()[,1]
+      data_mat2=data.matrix(data_mat2)
+      kmeans=as.character(kmeaner())
+      
+      totaler=data.frame(table(ids))
+      k_df = data.frame(table(kmeans, ids))
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
+      
+      k_mat=k_mat[,-1]
+      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
+      
+      pp=stats::prcomp(k_add)
+      plotter=data.frame(pp$x)
+      colnames(plotter)=paste0("PC", 1:ncol(plotter))
+      plotter$SampleID=totaler$ids
+      
+      if(length(input$meta_val)>0){
+        grouper=meta_mat()[,input$meta_val]
+        
+        plotter$Group=as.character(plotter$SampleID)
+        samps=as.character(unique(plotter$SampleID))
+        for(jj in 1:length(samps)){
+          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=as.character(grouper[,input$meta_val][1])
+          
+          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
+        }
+      } else {
+        plotter$Group=plotter$SampleID
+      }
+      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+    })
+  
+  output$umap_download_loading = downloadHandler(
+    filename = 'sample_PCA_loadings.txt',
+    content = function(file) {
+      data_mat2=data_mat()[,-1]
+      ids=data_mat()[,1]
+      data_mat2=data.matrix(data_mat2)
+      kmeans=as.character(kmeaner())
+      
+      totaler=data.frame(table(ids))
+      k_df = data.frame(table(kmeans, ids))
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
+      
+      k_mat=k_mat[,-1]
+      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
+      
+      pp=stats::prcomp(k_add)
+      plotter=data.frame(pp$rotation)
+      
+      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
+    })
+  
+  
+  ## TSNE ##
+  output$tsne_download = downloadHandler(
+    filename = 'TSNE_plots.png',
+    content = function(file) {
+      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
+      print(
+        gridExtra::grid.arrange(
+          gridExtra::arrangeGrob(vals$tsne_samps, vals$tsne_kmeans, nrow=1),
+          vals$tsne_clusters, nrow=2)
+      )
+      grDevices::dev.off()
+    })
+  
+  output$tsne_download_vals = downloadHandler(
+    filename = 'sample_PCA_values.txt',
+    content = function(file) {
+      data_mat2=data_mat()[,-1]
+      ids=data_mat()[,1]
+      data_mat2=data.matrix(data_mat2)
+      kmeans=as.character(kmeaner())
+      
+      totaler=data.frame(table(ids))
+      k_df = data.frame(table(kmeans, ids))
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
+      
+      k_mat=k_mat[,-1]
+      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
+      
+      pp=stats::prcomp(k_add)
+      plotter=data.frame(pp$x)
+      colnames(plotter)=paste0("PC", 1:ncol(plotter))
+      plotter$SampleID=totaler$ids
+      
+      if(length(input$meta_val)>0){
+        grouper=meta_mat()[,input$meta_val]
+        
+        plotter$Group=as.character(plotter$SampleID)
+        samps=as.character(unique(plotter$SampleID))
+        for(jj in 1:length(samps)){
+          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=as.character(grouper[,input$meta_val][1])
+          
+          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
+        }
+      } else {
+        plotter$Group=plotter$SampleID
+      }
+      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+    })
+  
+  output$tsne_download_loading = downloadHandler(
+    filename = 'sample_PCA_loadings.txt',
+    content = function(file) {
+      data_mat2=data_mat()[,-1]
+      ids=data_mat()[,1]
+      data_mat2=data.matrix(data_mat2)
+      kmeans=as.character(kmeaner())
+      
+      totaler=data.frame(table(ids))
+      k_df = data.frame(table(kmeans, ids))
+      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
+      
+      k_mat=k_mat[,-1]
+      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
+      
+      pp=stats::prcomp(k_add)
+      plotter=data.frame(pp$rotation)
+      
+      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
+    })
+
+  output$tsne_coord_download = downloadHandler(
+    filename = 'TSNE_coords.txt',
+    content = function(file) {
+      pp=tsne_coords()
+      ids=data_mat()[,1]
+      plotter=data.frame(pp, SampleID=ids)
+      plotter$Kmeans=as.character(kmeaner())
+      if(length(input$meta_val)>0){
+        grouper=meta_mat()[,input$meta_val]
+        
+        plotter$Group=as.character(plotter$SampleID)
+        samps=as.character(unique(plotter$SampleID))
+        for(jj in 1:length(samps)){
+          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=as.character(grouper[,input$meta_val][1])
+          
+          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
+        }
+      } else {
+        plotter$Group=plotter$SampleID
+      }
+      utils::write.table(tsne_coords(), file, sep='\t', quote=F, row.names=F)
+    })
+
+  ## Composition ##
+  output$comp_download = downloadHandler(
+    filename = 'Composition_plot.pdf',
+    content = function(file) {
+      grDevices::pdf(file, width=input$download_width, height=input$download_height)
+      print(vals$comp_plot)
+      grDevices::dev.off()
+    })
+  
   output$comp_feat_download = downloadHandler(
     filename = 'Composition_plot_features.pdf',
     content = function(file) {
@@ -1176,156 +1075,21 @@ app_server <- function(input, output, session) {
       grDevices::dev.off()
     })
   
-  
-  de_stats <- reactive({
-    withProgress({
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      
-      full_res=data.frame(Feature=NA, avgLogFC=NA, p_val=NA, adj_p_val=NA, Kmean=NA)
-      ks=unique(kmeans)
-      for(jj in 1:length(ks)){
-        cells.1=which(kmeans==ks[jj])
-        cells.2=which(kmeans!=ks[jj])
-        data.use=t(data_mat2)
-        res=WilcoxDETest2(data.use, cells.1, cells.2)
-        res$Kmean=ks[jj]
-        full_res=rbind(full_res, res)
-      }
-      full_res=full_res[-1,]
-      full_res=full_res[order(full_res$avgLogFC, decreasing=T),]
-      full_res=full_res[order(full_res$adj_p_val, decreasing=F),]
-      full_res
-    }, message="Calculating DE stats")
-  })
-  
-  output$de_feats <- DT::renderDT({
-    de_stats()
-  })
-  
-  output$diff_volc <- renderPlot({
-    feat_df = subset(de_stats(), Kmean==input$k_val)
-    good_feats=subset(feat_df, avgLogFC > input$log_val & adj_p_val < input$p_val)
-    okay_feats=subset(feat_df, avgLogFC < input$log_val & adj_p_val > input$p_val)
-    
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    
-    ggplot(feat_df, aes(.data$avgLogFC, log10(.data$adj_p_val+1))) + 
-      geom_point(color='grey85', size=3) +
-      scale_y_reverse() + ylab("-log10 adjusted p-value") +
-      geom_label_repel(data=good_feats, aes(.data$avgLogFC, log10(.data$adj_p_val+1), label=.data$Feature)) +
-      geom_point(data=good_feats, aes(.data$avgLogFC, log10(.data$adj_p_val+1)), color='darkorange1', size=3) +
-      geom_vline(xintercept = input$log_val, color="darkorange1") +
-      geom_hline(yintercept = log10(input$p_val+1), color="darkorange1") +
-      theme_bw() + 
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-  })
-  
-  output$diff_heat <- renderPlot({
-    feat_df = subset(de_stats(), Kmean==input$k_val)
-    good_feats=subset(feat_df, avgLogFC > input$log_val & adj_p_val < input$p_val)
-    okay_feats=subset(feat_df, avgLogFC < input$log_val & adj_p_val > input$p_val)
-    
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    
-    heat_data=data_mat2[,as.character(good_feats$Feature)]
-    
-    plotter=data.frame(SampleID=ids, Kmeans=as.character(kmeaner()))
-    
-    if(length(input$meta_val)>0){
-      grouper=meta_mat()[,input$meta_val]
-      
-      plotter$Group=as.character(plotter$SampleID)
-      samps=as.character(unique(plotter$SampleID))
-      for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
-        grouper=as.character(grouper[,input$meta_val][1])
-        
-        plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-      }
-    } else {
-      plotter$Group=plotter$SampleID
-    }
-    
-    
-    
-    
-    h_agg=stats::aggregate(heat_data, by=list(plotter$Group, plotter$Kmeans), "mean")
-    colnames(h_agg)[1:2] <- c("Group", "Kmeans")
-    h_mat = data.matrix(h_agg[,3:ncol(h_agg)])
-    h_mat=t(scale(t(h_mat)))
-    h_mat[is.na(h_mat)]<-0
-    
-    if(input$group_sel=="Group"){
-      colorer=c()
-      for(k in 1:length(h_agg[,"Kmeans"])){
-        colorer[k]=colors_clusters()[k]
-        names(colorer)[k]=h_agg[,"Kmeans"][k]
-      }
-      ha=ComplexHeatmap::columnAnnotation(Kmeans=h_agg[,"Kmeans"],
-                          col=list(Kmeans=colorer))
-      splitter=h_agg$Group
-    } else {
-      colorer2=c()
-      for(j in 1:length(h_agg[,"Group"])){
-        colorer2[j]=colors_samples[j]
-        names(colorer2)[j]=h_agg[,"Group"][j]
-      }
-      ha=ComplexHeatmap::columnAnnotation(Group=h_agg[,"Group"],
-                          col=list(Group=colorer2))
-      splitter=h_agg$Kmeans
-    }
-    
-    
-    ComplexHeatmap::Heatmap(t(h_mat), show_row_names = T, show_column_names = F,
-            top_annotation = ha,
-            heatmap_legend_param = list(title = "Scaled Value"),
-            cluster_rows = T, cluster_columns = T, #row_names_side = 'left',
-            column_names_gp = grid::gpar(fontsize=12),
-            row_title_gp = grid::gpar(fontsize = 10),
-            row_names_max_width = unit(10,'cm'),
-            use_raster = T,
-            #cluster_row_slices=F,
-            column_split = splitter,
-            #left_annotation = ha,
-            col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
-    
-    
-  })
-  
-  WilcoxDETest2 <- function(
-    data.use,
-    cells.1,
-    cells.2,
-    verbose = TRUE,
-    ...
-  ) {
-    data.use <- data.use[, c(cells.1, cells.2), drop = FALSE]
-    g=c(rep(0,length(cells.1)), rep(1, length(cells.2)))
-    
-    p_val <- sapply(
-      X = 1:nrow(x = data.use),
-      FUN = function(x) {
-        #return(min(2 * min(limma::rankSumTestWithCorrelation(index = j, statistics = data.use[x, ])), 1))
-        return(stats::wilcox.test(data.use[x,cells.1], data.use[x,cells.2])$p.value)
-      }
-    )
-    
-    foldB=rowMeans(data.use[,cells.2])
-    foldA=rowMeans(data.use[,cells.1])
-    avgLogFC=(foldB-foldA)/(foldA)
-    adj_p_val=stats::p.adjust(p_val, method="BH")
-    return(data.frame(Feature=rownames(x = data.use), avgLogFC, p_val, adj_p_val))
-    
-  }
-  
-  
-}
+  output$comp_download_table = downloadHandler(
+    filename = 'Composition_table.txt',
+    content = function(file) {
+      plotter=plotter_melt()
+      plotter_melt=reshape2::melt(data=plotter, id.vars=c("SampleID", "Group"))
+      utils::write.table(plotter_melt, file=file, row.names=F, sep='\t', quote=F)
+    })
 
+  ## Markers ##  
+  output$heat_download = downloadHandler(
+    filename = 'marker_heatmap.pdf',
+    content = function(file) {
+      grDevices::pdf(file, width=input$download_width, height=input$download_height)
+      print(gridExtra::grid.arrange(vals$marker_heat))
+      grDevices::dev.off()
+    })
+
+}
