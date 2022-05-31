@@ -83,9 +83,9 @@ clusterJF.tbl <- function(clustered_data, colors, xlab, ylab, legend.name, ...){
     
 
 
-#' Plot a sample based cluster for JoesFlow
+#' Sample-based PCA for JoesFlow
 #' 
-#' @param clustered_data Object containing clustered data (expects output from `prcomp` or `uamp`)
+#' @param clustered_data Object containing clustered data (expects output from `prcomp` or `umap`)
 #' @param ids Character vector of ids for each row in `clustered_data$x`, corresponding to SampleID in `meta`
 #' @param meta Data frame containing metadata, with SampleID in the first column and Group label in the second column
 #' @param colors1 Vector of colors for samples

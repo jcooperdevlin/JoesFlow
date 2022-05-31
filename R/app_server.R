@@ -247,20 +247,28 @@ app_server <- function(input, output, session) {
     
   })
   
-  # sample-based PCA
-  samp_pca <- reactive({
+  
+  ##### sample-based PCA #####
+  # run the PCA
+  sb_pca <- reactive({
+    
     groups_table <- table(data_mat()[,1], kmeaner())
     
     pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
-      stats::prcomp() %>%
-      
-      sb_clusterJF(ids = rownames(groups_table),
-                   meta = meta_mat()[,2],
-                   colors1 = colors_samples,
-                   colors2 = colors_clusters())
+      stats::prcomp()
+    
+    list(pp = pp, groups_table = groups_table)
   })
-  
-  # do we really need to replicate this a bunch of times?
+  # generate the figures
+  samp_pca <- reactive({
+    
+    sb_clusterJF(sb_pca()$pp,
+                 ids = rownames(sb_pca()$groups_table),
+                 meta = as.character(meta_mat()[,input$meta_val]),
+                 colors1 = colors_samples,
+                 colors2 = colors_clusters())
+    
+  })
   output$samp_p_pca <- renderPlot({
     vals$pca_clusters <- samp_pca()
     print(samp_pca())
