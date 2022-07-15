@@ -7,9 +7,6 @@
 #' 
 #' 
 
-library(DT)
-library(shinythemes)
-
 loadingLogo <- function(href, src, loadingsrc, height = NULL, width = NULL, alt = NULL) {
   tagList(
     tags$head(
@@ -176,8 +173,6 @@ app_ui <- function(request) {
                                                                                   choices=c(" ", "PCA", "UMAP", "tSNE"), selected=" "))),
                                                fluidRow(column(12, uiOutput("comp_ui"))),
                                                fluidRow(column(6, downloadButton('comp_feat_download')))
-                                               #fluidRow(column(6, uiOutput("comp_ui")),
-                                               #          column(6, uiOutput(("comp_plots"))))
                                       ),
                                       tabPanel("Markers",
                                                fluidRow(column(12,
@@ -185,23 +180,6 @@ app_ui <- function(request) {
                                                ),
                                                fluidRow(column(6, downloadButton('heat_download')))
                                       )
-                                      #tabPanel("Markers",
-                                      #         fluidRow(column(12,
-                                      #                         DTOutput("de_feats"))),
-                                      #         fluidRow(
-                                      #           column(width=6,
-                                      #                  fluidRow(column(6, uiOutput("select_k")),
-                                      #                           column(6, uiOutput("select_p"))),
-                                      #                  fluidRow(column(6, selectInput('group_sel', "Split Columns",
-                                      #                                                 choices=c("Kmeans", "Group"),
-                                      #                                                 selected="Kmeans")),
-                                      #                           column(6, uiOutput("select_l")))
-                                      #                  ),
-                                      #           column(width = 6,
-                                      #                  fluidRow(column(12, plotOutput("diff_volc")))
-                                      #           )),
-                                      #         fluidRow(column(12, plotOutput("diff_heat", height = "700px")))
-                                      #)
                           )
                         )
                ),
