@@ -183,7 +183,7 @@ marker_heatJF <- function(sample_data, ids, meta, kmeans_groups, colors, sample_
   }
 
   # create heatmap  
-  select(plotter_sub, -SampleID, -Group, -Group_fact, -Kmeans) %>%
+  select(plotter_sub, -.data$SampleID, -.data$Group, -.data$Group_fact, -.data$Kmeans) %>%
     t() %>%
     scale() %>%
     ComplexHeatmap::Heatmap(show_row_names = T, show_column_names = F,
@@ -200,3 +200,45 @@ marker_heatJF <- function(sample_data, ids, meta, kmeans_groups, colors, sample_
                             col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))
 }
 
+
+#' Composition plot for Joes Flow
+#' 
+#' @param meta Named character vector containing metadata labels. Names of each element of the vector should correspond to sample IDs and include all IDs in `kmeans_groups`.
+#' @param kmeans_groups Named character vector containing Kmeans group label for each sample. Names of each element of the vector should correspond to sample IDs and include all IDs in `meta`.
+#' @param colors Vector of colors for clusters
+#' 
+#' @return A ggplot object
+#' @export
+#' @importFrom rlang .data
+compositionJF <- function(meta, kmeans_groups, colors)
+{
+  plotter <- tibble(ids = names(kmeans_groups),
+                    cluster = kmeans_groups,
+                    group = meta[.data$ids]) %>%
+    
+    # count up totals for each cluster by group and sample ID
+    group_by(.data$ids, .data$cluster, .data$group) %>%
+    summarize(n = length(.data$group)) %>%
+    ungroup() %>%
+    
+    # count up totals for each sample ID for each group
+    group_by(.data$ids, .data$group) %>%
+    mutate(N = sum(.data$n)) %>%
+    ungroup() %>%
+    
+    # calculate percent of each cluster for each sample ID
+    mutate(pct = 100 * .data$n / .data$N)
+  
+  
+  g1 <- ggplot(plotter, aes(.data$ids, .data$pct, fill=.data$cluster)) + 
+    geom_col()+ scale_fill_manual(values=colors) + theme_bw() +
+    guides(fill = guide_legend("Cluster")) + 
+    ylab("Cluster Percentage %") +
+    xlab("Sample IDs") +
+    theme(axis.title=element_text(size=16)) +
+    facet_wrap(~.data$group, ncol=4, scales="free_x")
+  
+  # return plotter and g1
+  list(plotter = plotter,
+       g1 = g1)
+}

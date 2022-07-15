@@ -43,6 +43,22 @@ app_server <- function(input, output, session) {
     
   })
   
+  meta_vec <- reactive({
+    inFile <- input$file2
+    
+    if (is.null(inFile))
+      return(NULL)
+    
+    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
+    
+    # first column: IDs
+    # second column: meta data
+    retval <- tt[,2]
+    names(retval) <- tt[,1]
+    
+    retval
+  })
+  
   # Visualize::colors
   output$col_pal <- renderUI({
     col_pals=c("Default",
@@ -149,7 +165,7 @@ app_server <- function(input, output, session) {
       plotter$Group=as.character(plotter$SampleID)
       samps=as.character(unique(plotter$SampleID))
       for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
+        grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
         grouper=as.character(grouper[,input$meta_val][1])
         
         plotter$Group[plotter$SampleID==samps[jj]]<-grouper
@@ -204,6 +220,7 @@ app_server <- function(input, output, session) {
         kk=paste0("C", as.character(memb))
       }
 
+      names(kk) <- ids
       kk
     }, message = "Calculating clusters")
   })
@@ -348,7 +365,7 @@ app_server <- function(input, output, session) {
       plotter$Group=as.character(plotter$SampleID)
       samps=as.character(unique(plotter$SampleID))
       for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
+        grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
         grouper=as.character(grouper[,input$meta_val][1])
         
         plotter$Group[plotter$SampleID==samps[jj]]<-grouper
@@ -396,67 +413,18 @@ app_server <- function(input, output, session) {
   
   ##### Composition #####
   
+  composition_plot <- reactive({
+    compositionJF(meta_vec(), kmeaner(), colors_clusters())
+  })
+  
   plotter_melt <- reactive({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    kmeans=as.character(kmeaner())
-    
-    totaler=data.frame(table(ids))
-    k_df = data.frame(table(kmeans, ids))
-    k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-    
-    k_mat=k_mat[,-1]
-    k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-    colnames(k_add)=colnames(k_mat)
-    
-    plotter=data.frame(k_add, SampleID=totaler$ids)
-    
-    if(length(input$meta_val)>0){
-      grouper=meta_mat()[,input$meta_val]
-      
-      plotter$Group=as.character(plotter$SampleID)
-      samps=as.character(unique(plotter$SampleID))
-      for(jj in 1:length(samps)){
-        grouper=subset(meta_mat(), ID==samps[jj])
-        grouper=as.character(grouper[,input$meta_val][1])
-        
-        plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-      }
-    } else {
-      plotter$Group=plotter$SampleID
-    }
-    
-    #plotter_melt=melt(data=plotter, id.vars=c("SampleID", "Group"))
-    plotter
+    composition_plot()$plotter
   })
   
   output$composition_ui <- renderPlot({
-    plotter=plotter_melt()
-    plotter_melt=reshape2::melt(data=plotter, id.vars=c("SampleID", "Group"))
-    if(length(unique(plotter$Group))<nrow(plotter)){
-      
-      k_cols=length(unique(plotter_melt$Group))
-      colors_use = c(colors_clusters()[1:k_cols], colors_samples)
-      
-      g1=ggplot(plotter_melt, aes(.data$SampleID, .data$value, fill=.data$variable)) + 
-        #geom_tile(aes(x=SampleID,y=105,fill=Group, height=5), show.legend = F) +
-        geom_col()+ scale_fill_manual(values=colors_clusters()) + theme_bw() +
-        guides(fill = guide_legend("Cluster")) + ylab("Cluster Percentage %") +
-        theme(axis.text=element_text(color='black', size=14),
-              axis.title=element_text(color='black', size=16)) +
-        facet_wrap(~Group, ncol=k_cols, scales="free")
-    } else {
-      
-      g1=ggplot(plotter_melt, aes(.data$SampleID, .data$value, fill=.data$variable)) + 
-        geom_col()+ scale_fill_manual(values=colors_clusters()) + theme_bw() +
-        guides(fill = guide_legend("Cluster")) + ylab("Cluster Percentage %") +
-        theme(axis.text=element_text(color='black', size=14),
-              axis.title=element_text(color='black', size=16))
-    }
-    vals$comp_plot<-g1
+    vals$comp_plot<-composition_plot()$g1
     
-    g1
+    composition_plot()$g1
     
   })
   
@@ -466,35 +434,17 @@ app_server <- function(input, output, session) {
     
     plotter=plotter_melt()
     
-    # if(!is.null(input$plot1_click)){
-    # 
-    #   if(is.null(input$plot1_click$panelvar1)){
-    #     plotter=plotter[order(plotter$SampleID, decreasing=F),]
-    #     click_tab=plotter[round(input$plot1_click$x,0),]
-    #   } else {
-    #     plotter_sub=subset(plotter, Group==input$plot1_click$panelvar1)
-    #     plotter_sub=plotter_sub[order(plotter_sub$SampleID, decreasing=F),]
-    #     click_tab=plotter_sub[round(input$plot1_click$x,0),]
-    #   }
-    #   
-    #   click_tab %>% 
-    #     mutate_if(is.numeric, signif, digits=2)
-    #   click_tab=data.frame(SampleID=click_tab$SampleID, Group=click_tab$Group, click_tab[,1:(ncol(click_tab)-2)])
-    # } 
-    
     if(!is.null(input$plot1_brush)){
       
       if(is.null(input$plot1_brush$panelvar1)){
         plotter=plotter[order(plotter$SampleID, decreasing=F),]
         click_tab=plotter[round(input$plot1_brush$xmin,0):round(input$plot1_brush$xmax,0),]
       } else {
-        plotter_sub=subset(plotter, Group==input$plot1_brush$panelvar1)
+        plotter_sub=dplyr::filter(plotter, .data$Group==input$plot1_brush$panelvar1)
         plotter_sub=plotter_sub[order(plotter_sub$SampleID, decreasing=F),]
         click_tab=plotter_sub[round(input$plot1_brush$xmin,0):round(input$plot1_brush$xmax,0),]
       }
       
-      #click_tab %>% 
-      #  mutate_if(is.numeric, signif, digits=2)
       click_tab=data.frame(SampleID=click_tab$SampleID, 
                            Group=click_tab$Group, 
                            signif(click_tab[,1:(ncol(click_tab)-2)], digits=3)
@@ -692,7 +642,7 @@ app_server <- function(input, output, session) {
         plotter$Group=as.character(plotter$SampleID)
         samps=as.character(unique(plotter$SampleID))
         for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
           grouper=as.character(grouper[,input$meta_val][1])
           
           plotter$Group[plotter$SampleID==samps[jj]]<-grouper
@@ -733,7 +683,7 @@ app_server <- function(input, output, session) {
         plotter$Group=as.character(plotter$SampleID)
         samps=as.character(unique(plotter$SampleID))
         for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
           grouper=as.character(grouper[,input$meta_val][1])
           
           plotter$Group[plotter$SampleID==samps[jj]]<-grouper
@@ -791,7 +741,7 @@ app_server <- function(input, output, session) {
         plotter$Group=as.character(plotter$SampleID)
         samps=as.character(unique(plotter$SampleID))
         for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
           grouper=as.character(grouper[,input$meta_val][1])
           
           plotter$Group[plotter$SampleID==samps[jj]]<-grouper
@@ -828,7 +778,7 @@ app_server <- function(input, output, session) {
         plotter$Group=as.character(plotter$SampleID)
         samps=as.character(unique(plotter$SampleID))
         for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
           grouper=as.character(grouper[,input$meta_val][1])
           
           plotter$Group[plotter$SampleID==samps[jj]]<-grouper
@@ -900,7 +850,7 @@ app_server <- function(input, output, session) {
         plotter$Group=as.character(plotter$SampleID)
         samps=as.character(unique(plotter$SampleID))
         for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
           grouper=as.character(grouper[,input$meta_val][1])
           
           plotter$Group[plotter$SampleID==samps[jj]]<-grouper
@@ -945,7 +895,7 @@ app_server <- function(input, output, session) {
         plotter$Group=as.character(plotter$SampleID)
         samps=as.character(unique(plotter$SampleID))
         for(jj in 1:length(samps)){
-          grouper=subset(meta_mat(), ID==samps[jj])
+          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
           grouper=as.character(grouper[,input$meta_val][1])
           
           plotter$Group[plotter$SampleID==samps[jj]]<-grouper
