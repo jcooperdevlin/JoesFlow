@@ -2,7 +2,7 @@
 # https://github.com/IDSS-NIAID/JoesFlow
 
 # start with shiny server and R
-FROM rocker/shiny:4.1.2
+FROM rocker/shiny:4.2.1
 
 # install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -19,17 +19,17 @@ RUN R -e 'install.packages(\
     "devtools",\
     "magick",\
     "RSpectra",\
-    "shinythemes"))'
-
+    "shinythemes"),\
+  repos="https://packagemanager.rstudio.com/all/2022-07-14+Y3JhbiwyOjQ1MjYyMTU7QzczRDEwMEE")'
+  
 RUN R -e 'BiocManager::install("ComplexHeatmap", update=FALSE)'
 
 # install JoesFlow
-#RUN R -e 'devtools::install_github("IDSS-NIAID/JoesFlow", upgrade="never", dependences = TRUE)'
-RUN wget https://raw.githubusercontent.com/IDSS-NIAID/JoesFlow/main/R/app_server.R \ 
-         https://raw.githubusercontent.com/IDSS-NIAID/JoesFlow/main/R/app_ui.R
+RUN R -e 'devtools::install_github("IDSS-NIAID/JoesFlow", upgrade="never", dependences = TRUE)'
+RUN wget https://raw.githubusercontent.com/IDSS-NIAID/JoesFlow/docker/shiny/server.R \ 
+         https://raw.githubusercontent.com/IDSS-NIAID/JoesFlow/docker/shiny/ui.R
 RUN mkdir /srv/shiny-server/JoesFlow
-RUN mv app_server.R /srv/shiny-server/JoesFlow/server.R
-RUN mv app_ui.R /srv/shiny-server/JoesFlow/ui.R
+RUN mv *.R /srv/shiny-server/JoesFlow/.
 
 # run app
 CMD ["/usr/bin/shiny-server"]
