@@ -212,31 +212,34 @@ marker_heatJF <- function(sample_data, ids, meta, kmeans_groups, colors, sample_
 #' @importFrom rlang .data
 compositionJF <- function(meta, kmeans_groups, colors)
 {
-  plotter <- tibble(ids = names(kmeans_groups),
+  plotter <- tibble(SampleID = names(kmeans_groups),
                     cluster = kmeans_groups,
-                    group = meta[.data$ids]) %>%
+                    Group = as.character(meta[.data$SampleID])) %>%
     
     # count up totals for each cluster by group and sample ID
-    group_by(.data$ids, .data$cluster, .data$group) %>%
-    summarize(n = length(.data$group)) %>%
+    group_by(.data$SampleID, .data$cluster, .data$Group) %>%
+    dplyr::summarize(n = length(.data$Group)) %>%
     ungroup() %>%
     
     # count up totals for each sample ID for each group
-    group_by(.data$ids, .data$group) %>%
+    group_by(.data$SampleID, .data$Group) %>%
     mutate(N = sum(.data$n)) %>%
     ungroup() %>%
     
     # calculate percent of each cluster for each sample ID
-    mutate(pct = 100 * .data$n / .data$N)
+    mutate(pct = 100 * .data$n / .data$N) %>%
+    
+    # get rid of these unneeded columns
+    dplyr::select(-.data$N, -.data$n)
   
   
-  g1 <- ggplot(plotter, aes(.data$ids, .data$pct, fill=.data$cluster)) + 
+  g1 <- ggplot(plotter, aes(.data$SampleID, .data$pct, fill=.data$cluster)) + 
     geom_col()+ scale_fill_manual(values=colors) + theme_bw() +
     guides(fill = guide_legend("Cluster")) + 
     ylab("Cluster Percentage %") +
     xlab("Sample IDs") +
     theme(axis.title=element_text(size=16)) +
-    facet_wrap(~.data$group, ncol=4, scales="free_x")
+    facet_wrap(~.data$Group, ncol=4, scales="free_x")
   
   # return plotter and g1
   list(plotter = plotter,

@@ -463,28 +463,28 @@ app_server <- function(input, output, session) {
   })
   
   output$click_info <- DT::renderDataTable(server = FALSE, {
+    # input$plot1_brush is defined in app_ui
     # Because it's a ggplot2, we don't need to supply xvar or yvar; if this
     # were a base graphics plot, we'd need those.
-    
-    plotter=plotter_melt()
-    
+  
+    # make the dataframe wider before sending to renderDataTable  
+    plotter=plotter_melt() %>%
+      dplyr::mutate(pct = signif(.data$pct, digits = 3)) %>%
+      tidyr::pivot_wider(id_cols = c('SampleID', 'Group'), names_from = 'cluster', values_from = 'pct')
+        
+    # if we have a selection
     if(!is.null(input$plot1_brush)){
-      
-      if(is.null(input$plot1_brush$panelvar1)){
-        plotter=plotter[order(plotter$SampleID, decreasing=F),]
-        click_tab=plotter[round(input$plot1_brush$xmin,0):round(input$plot1_brush$xmax,0),]
-      } else {
-        plotter_sub=dplyr::filter(plotter, .data$Group==input$plot1_brush$panelvar1)
-        plotter_sub=plotter_sub[order(plotter_sub$SampleID, decreasing=F),]
-        click_tab=plotter_sub[round(input$plot1_brush$xmin,0):round(input$plot1_brush$xmax,0),]
-      }
-      
-      click_tab=data.frame(SampleID=click_tab$SampleID, 
-                           Group=click_tab$Group, 
-                           signif(click_tab[,1:(ncol(click_tab)-2)], digits=3)
-      )
-      
+      # if there is mroe than one panel, subset to the selected panel
+      if(!is.null(input$plot1_brush$panelvar1))
+        plotter <- dplyr::filter(plotter, .data$Group==input$plot1_brush$panelvar1)
+        
+      # verify that it is sorted by SampleID (should be already)
+      plotter <- dplyr::arrange(plotter, .data$SampleID)
+        
+      # grab the correct columns of data basaed on the selected area of the graph
+      click_tab=plotter[round(input$plot1_brush$xmin,0):round(input$plot1_brush$xmax,0),]
     } else {
+      # otherwise display nothing
       click_tab=data.frame()
     }
     
