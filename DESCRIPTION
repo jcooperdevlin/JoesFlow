@@ -1,6 +1,6 @@
 Package: JoesFlow
 Title: Joes Flow simplified analysis for single cell modality data
-Version: 0.0.0.9000
+Version: 0.1.0-1
 Authors@R: person('Cooper', 'Devlin', email = 'jcooperdevlin@gmail.com', role = c('cre', 'aut'))
 Description: Joes Flow simplified analysis for single cell modality data.
 License: MIT + file LICENSE
