@@ -38,7 +38,7 @@ colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("defau
 
 Install locally in RStudio
 ``` {r install, eval=FALSE}
-remotes::install_github("jcooperdevlin/JoesFlow")
+remotes::install_github("IDSS-NIAID/JoesFlow")
 ```
 
 ```{r setup, eval=FALSE}
@@ -82,52 +82,6 @@ meta <- meta_data[,2]
 names(meta) <- meta_data[,1]
 ```
 
-```{r pca_source, echo=FALSE}
-
-composition_plot=function(data, meta, k) {
-  data_mat2=data[,-1]
-  ids=data[,1]
-  data_mat2=data.matrix(data_mat2)
-
-  kmeaner=kmeans(data_mat2, k)
-  kk=paste0("C", kmeaner$cluster)
-  
-  kmeans=as.character(kk)
-    
-  totaler=data.frame(table(ids))
-  k_df = data.frame(table(kmeans, ids))
-  k_mat = dcast(k_df, ids ~ kmeans)
-  
-  k_mat=k_mat[,-1]
-  k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-  
-  plotter=data.frame(k_add, SampleID=totaler$ids)
-  
-  plotter$Group=as.character(plotter$SampleID)
-  samps=as.character(unique(plotter$SampleID))
-  for(jj in 1:length(samps)){
-    grouper=subset(meta, ID==samps[jj])
-    grouper=as.character(grouper$Group[1])
-    
-    plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-  }
-  plotter_melt=melt(data=plotter, id.vars=c("SampleID", "Group"))
-      
-  k_cols=length(unique(plotter_melt$Group))
-  colors_use = c(colors_clusters[1:k_cols], colors_samples)
-  
-  g1=ggplot(plotter_melt, aes(SampleID, value, fill=variable)) + 
-    #geom_tile(aes(x=SampleID,y=105,fill=Group, height=5), show.legend = F) +
-    geom_col()+ scale_fill_manual(values=colors_clusters) + theme_bw() +
-    guides(fill = guide_legend("Cluster")) + ylab("Cluster Percentage %") +
-    theme(axis.text=element_text(color='black', size=14),
-          axis.title=element_text(color='black', size=16)) +
-    facet_wrap(~Group, ncol=k_cols, scales="free")
-  grid.arrange(g1)
-  total_col=ncol(plotter)
-  #datatable(data.frame(plotter[,(total_col-1):total_col], plotter[,1:(total_col-2)]))
-}
-```
 
 ### PCA figures
 

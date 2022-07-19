@@ -1,9 +1,43 @@
 #' The application server-side
 #' 
 #' @param input,output,session Internal parameters for {shiny}. 
-#'     DO NOT REMOVE.
-#' @import shiny
-#' @noRd
+#'
+#' @export
+#' @importFrom shiny column
+#' @importFrom shiny downloadHandler
+#' @importFrom shiny observe
+#' @importFrom shiny fluidRow
+#' @importFrom shiny plotOutput
+#' @importFrom shiny reactive
+#' @importFrom shiny reactiveValues
+#' @importFrom shiny renderPlot
+#' @importFrom shiny renderUI
+#' @importFrom shiny selectInput
+#' @importFrom shiny sliderInput
+#' @importFrom shiny tagList
+#' @importFrom shiny withProgress
+#' 
+#' @import dplyr
+#' @importFrom matrixStats colVars
+#' @importFrom reshape2 dcast
+#' @importFrom reshape2 melt
+#' @importFrom tidyr pivot_wider
+#' 
+#' @import ggplot2
+#' @import patchwork
+#' @importFrom cowplot plot_grid
+#' @importFrom DT renderDT
+#' @importFrom DT renderDataTable
+#' @importFrom ggsci pal_d3
+#' @importFrom ggsci pal_igv
+#' @importFrom gridExtra grid.arrange
+#' @importFrom gridExtra arrangeGrob
+#' @importFrom RColorBrewer brewer.pal
+#' 
+#' @import ComplexHeatmap
+#' @import fastcluster
+#' @import Rtsne
+#' @import uwot
 app_server <- function(input, output, session) {
   
   colors_clusters_og = c(ggsci::pal_d3("category10")(10), ggsci::pal_d3("category20b")(20), ggsci::pal_igv("default")(51))
@@ -305,7 +339,7 @@ app_server <- function(input, output, session) {
     withProgress({
       
       data_mat()[,-1] %>%
-        uwot::umap(pca = min(15, ncol(.)), fast_sgd = TRUE)
+        uwot::umap(pca = min(15, ncol(data_mat())-1), fast_sgd = TRUE)
       
     }, message="Calculating UMAP")
   })

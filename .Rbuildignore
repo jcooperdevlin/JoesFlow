@@ -6,3 +6,5 @@ README.Rmd
 
 ^dev$
 ^README_files$
+Dockerfile
+^shiny$
