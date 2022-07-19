@@ -4,33 +4,33 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @noRd
-app_server <- function(input, output, session) {
+
+library(DT)
+library(ggplot2)
+library(matrixStats)
+library(uwot)
+library(RColorBrewer)
+library(ggsci)
+library(reshape2)
+library(gridExtra)
+library(ggrepel)
+library(Rtsne)
+library(ComplexHeatmap)
+library(circlize)
+library(hexbin)
+library(dplyr)
+library(periscope)
+library(cowplot)
+library(fastcluster)
   
-  library(DT)
-  library(ggplot2)
-  library(matrixStats)
-  library(uwot)
-  library(RColorBrewer)
-  library(ggsci)
-  library(reshape2)
-  library(gridExtra)
-  library(ggrepel)
-  library(Rtsne)
-  library(ComplexHeatmap)
-  library(circlize)
-  library(hexbin)
-  library(dplyr)
-  library(periscope)
-  library(cowplot)
-  library(fastcluster)
+#library(RANN)
+#library(igraph)
+#library(mstknnclust)
   
-  #library(RANN)
-  #library(igraph)
-  #library(mstknnclust)
-  
-  colors_clusters_og = c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
-  colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
-  
+colors_clusters_og = c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
+colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
+
+shinyServer(function(input, output, session){  
   options(shiny.maxRequestSize=1000*1024^2)
   
   vals <- reactiveValues()
@@ -1605,5 +1605,5 @@ app_server <- function(input, output, session) {
   }
   
   
-}
+})
 

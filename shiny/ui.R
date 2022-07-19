@@ -33,7 +33,7 @@ loadingLogo <- function(href, src, loadingsrc, height = NULL, width = NULL, alt 
   )
 }
 
-app_ui <- function(request) {
+
   tagList(
     # Leave this function for adding external resources
     # golem_add_external_resources(),
@@ -240,7 +240,7 @@ app_ui <- function(request) {
                ))
     )
   )
-}
+
 
 #' Add external Resources to the Application
 #' 
