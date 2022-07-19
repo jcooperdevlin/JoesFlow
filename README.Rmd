@@ -14,12 +14,12 @@ knitr::opts_chunk$set(
 The goal of JoesFlow is to analyze high-dimensional single cell data from flow cytometry, scRNA-seq, CITE-seq and any kind of single cell matrix data. JoesFlow utilizes novel scRNA-seq dimension reduction techniques to generate interpretable and informative visualizations that incorporate all aspects of a dataset in an unbiased manner.
 
 ```{r libs, echo=FALSE, message=FALSE, results='hide'}
-library(RColorBrewer) # brewer.pal
-library(ggsci) # pal_d3, pal_igv
+library(RColorBrewer)
+library(ggsci)
 library(ggplot2)
 library(ggrepel)
 library(reshape2)
-library(gridExtra) # grid.arrange, arangeGrob
+library(gridExtra)
 library(uwot)
 library(ComplexHeatmap)
 library(circlize)

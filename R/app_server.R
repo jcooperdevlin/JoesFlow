@@ -18,7 +18,6 @@
 #' @importFrom shiny withProgress
 #' 
 #' @import dplyr
-#' @importFrom matrixStats colVars
 #' @importFrom reshape2 dcast
 #' @importFrom reshape2 melt
 #' @importFrom tidyr pivot_wider
@@ -34,10 +33,10 @@
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom RColorBrewer brewer.pal
 #' 
-#' @import ComplexHeatmap
-#' @import fastcluster
-#' @import Rtsne
-#' @import uwot
+#' @importFrom ComplexHeatmap draw
+#' @importFrom fastcluster hclust
+#' @importFrom uwot umap
+#' @importFrom Rtsne Rtsne
 app_server <- function(input, output, session) {
   
   colors_clusters_og = c(ggsci::pal_d3("category10")(10), ggsci::pal_d3("category20b")(20), ggsci::pal_igv("default")(51))
@@ -169,7 +168,7 @@ app_server <- function(input, output, session) {
     data_mat2=data.matrix(data_mat2)
     
     rvars=data.frame(Feature=colnames(data_mat2),
-                     Variance=matrixStats::colVars(data_mat2))
+                     Variance=apply(data_mat2, 2, stats::var))
     rvars=rvars[order(rvars$Variance, decreasing=T),]
     
     rvars$Feature=factor(rvars$Feature, levels=rev(as.character(rvars$Feature)))
@@ -212,7 +211,7 @@ app_server <- function(input, output, session) {
     h_agg1=data.matrix(h_agg[,-1])
     
     rvars=data.frame(Feature=colnames(h_agg1),
-                     Variance=matrixStats::colVars(h_agg1))
+                     Variance=apply(h_agg1, 2, stats::var))
     rvars=rvars[order(rvars$Variance, decreasing=T),]
     
     rvars$Feature=factor(rvars$Feature, levels=rev(as.character(rvars$Feature)))
