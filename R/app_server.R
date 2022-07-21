@@ -129,7 +129,7 @@ app_server <- function(input, output, session) {
                 choices=msel)
   })
   
-  # Visualize::number of clusters
+  # Visualize::select cluster?
   output$select_k <- renderUI({
     sels=unique(as.character(kmeaner()))
     
@@ -137,7 +137,7 @@ app_server <- function(input, output, session) {
                 choices=sels)
   })
   
-  # Visualize::clustering method
+  # Visualize::number of clusters
   output$cluster_setting<-renderUI({
     sliderInput("kmean",
                 "Number of clusters:",
@@ -145,10 +145,7 @@ app_server <- function(input, output, session) {
                 min = 1,
                 max = 20)
   })
-  
-  # Visualize::Download height
-  # Visualize::Download width
-  
+
   
   ##### Data input tables #####
   
@@ -503,132 +500,100 @@ app_server <- function(input, output, session) {
   class = "display"
   )
   
-  observe({
-    if(input$feat_dim=="PCA" | input$feat_dim=="UMAP" | input$feat_dim=="tSNE"){
-      print(input$feat_dim)
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      kuniq=unique(kmeans)
-      
-      msel=colnames(data_mat())[-1]
-      
+  # generate figures for `Select Dimension Reduction`
+  dimreduct <- reactive({
+    if(input$feat_dim %in% c("PCA", "UMAP", "tSNE"))
+    {
+      # get coordinates from the correct dimension reduction method
       if(input$feat_dim=="PCA"){
-        umap_df=pca_coords()
-        plotter=data.frame(UMAP_1=umap_df$x[,1], UMAP_2=umap_df$x[,2], SampleID=ids)
+        x <- pca_coords()
       }
       if(input$feat_dim=="UMAP"){
-        umap_df=umap_coords()
-        plotter=data.frame(UMAP_1=umap_df[,1], UMAP_2=umap_df[,2], SampleID=ids)
+        x <- umap_coords()
       }
       if(input$feat_dim=="tSNE"){
-        umap_df=tsne_coords()
-        plotter=data.frame(UMAP_1=umap_df[,1], UMAP_2=umap_df[,2], SampleID=ids)
+        x <- tsne_coords()
       }
       
-      lapply(1:length(kuniq), function(i) {
-        plotter$Feature=data_mat2[,input[[paste0('k', i)]]]
-        plotter$Feature=scale(plotter$Feature)
-        
-        output[[paste0('kk', i)]] <- renderPlot({
-          g1=ggplot(sample(plotter), aes(.data$UMAP_1, .data$UMAP_2, z=.data$Feature)) +
-            stat_summary_hex() + theme_void() + 
-            ggtitle(paste0("Cluster C", i, "; ", input[[paste0('k', i)]])) +
-            scale_fill_gradient(low='grey85', high="red3") +
-            guides(color = guide_legend(input[[paste0('k', i)]])) +
-            theme(legend.position='none')
-          g1
-        })
+      # selected features
+      features <- sapply(paste0('k', 1:input$kmean), function(x) input[[x]])
+      
+      # cluster selected for each feature
+      names(features) <- paste0('C', 1:input$kmean)
+      
+      # generate figures
+      glister <- dimreductJF(x, data_mat()[,-1], features)
+    }else{
+      glister <- list()
+    }
+    
+    glister
+  })
+  
+  # this populates the figures for `Select Dimension Reduction`
+  observe({
+    # if a dimension reduction method has been selected
+    if(input$feat_dim %in% c("PCA", "UMAP", "tSNE")){
+      
+      # generate figures
+      glister <- dimreduct()
+      
+      # add generated figures to UI
+      lapply(1:input$kmean, function(i) {
+        output[[paste0('kk', i)]] <- renderPlot(glister[[i]])
       })
     }
   })
   
-  
-  glist<-reactive({
-    glister=list()
-    if(input$feat_dim=="PCA" | input$feat_dim=="UMAP" | input$feat_dim=="tSNE"){
-      print(input$feat_dim)
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-      kuniq=unique(kmeans)
-      
-      msel=colnames(data_mat())[-1]
-      
-      if(input$feat_dim=="PCA"){
-        umap_df=pca_coords()
-        plotter=data.frame(UMAP_1=umap_df$x[,1], UMAP_2=umap_df$x[,2], SampleID=ids)
-      }
-      if(input$feat_dim=="UMAP"){
-        umap_df=umap_coords()
-        plotter=data.frame(UMAP_1=umap_df[,1], UMAP_2=umap_df[,2], SampleID=ids)
-      }
-      if(input$feat_dim=="tSNE"){
-        umap_df=tsne_coords()
-        plotter=data.frame(UMAP_1=umap_df[,1], UMAP_2=umap_df[,2], SampleID=ids)
-      }
-      #lapply(1:length(kuniq), function(i) 
-      for(i in 1:length(kuniq)){
-        plotter$Feature=data_mat2[,input[[paste0('k', i)]]]
-        plotter$Feature=scale(plotter$Feature)
-        glister[[i]]<-
-          ggplot(sample(plotter), aes(.data$UMAP_1, .data$UMAP_2, z=.data$Feature)) +
-          stat_summary_hex() + theme_void() + 
-          ggtitle(paste0("Cluster C", i, "; ", input[[paste0('k', i)]])) +
-          scale_fill_gradient(low='grey85', high="red3") +
-          guides(color = guide_legend(input[[paste0('k', i)]])) +
-          theme(legend.position='right')
-      }
-    } else {glister=list()}
-    glister
-  })
-  
+  # this is for the `Select Dimension Reduction` UI
   output$comp_ui <- renderUI({
     data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
     kmeans=as.character(kmeaner())
-    kuniq=unique(kmeans)
+
+    msel=colnames(data_mat2)
+    howmanyrows=ceiling(input$kmean/3)
     
-    msel=colnames(data_mat())[-1]
-    howmanyrows=ceiling(length(kuniq)/3)
-    
-    data.use=t(data_mat2)
-    which2select<-c()
-    for(jj in 1:length(kuniq)){
+    which2select<-character(input$kmean)
+    for(jj in 1:input$kmean){
+      # calculate column means for cluster jj and all others
+      clusterjj    <- which(kmeans==paste0('C', jj))
+      clusterOther <- which(kmeans!=paste0('C', jj))
+
+      orderer <- tibble(meansjj    = colMeans(data_mat2[   clusterjj,]),
+                        meansOther = colMeans(data_mat2[clusterOther,]),
+                        diff = meansjj - meansOther,
+                        Feature=colnames(data_mat2)) %>%
+        
+        # sort such that the feature with the largest difference is at the top
+        arrange(desc(.data$diff))
       
-      cells.1=which(kmeans==kuniq[jj])
-      cells.2=which(kmeans!=kuniq[jj])
-      c1=rowMeans(data.use[,cells.1])
-      c2=rowMeans(data.use[,cells.2])
-      orderer=data.frame(c1,c2,diff=(c1-c2),Feature=rownames(data.use))
-      orderer=orderer[order(orderer$diff, decreasing=T),]
-      if(orderer$diff[1]<0){
-        orderer=orderer[order(orderer$c1, decreasing=T),]
-      }
-      which2select=c(which2select, as.character(orderer$Feature[1]))
+      # if the largest difference is smaller than everything else, pick the feature with the largest mean value
+      if(orderer$diff[1]<0)
+        orderer <- arrange(orderer, desc(.data$meansjj))
+
+      # this is the top feature of interest for cluster jj
+      which2select[jj] <- orderer$Feature[1]
     }
 
+    # generate UI elements for each cluster/feature
     plot_output_list<-lapply(1:howmanyrows, function(m) {
-      mult1=(3*m)-2
-      mult2=(3*m)-1
-      mult3=(3*m)
       
-      fluidRow(column(4,
-                      selectInput(paste0('k', mult1), paste0('Feature Variable C', mult1),
-                                  choices = msel, selected=which2select[mult1]),
-                      plotOutput(paste0('kk', mult1))),
-               column(4,
-                      selectInput(paste0('k', mult2), paste0('Feature Variable C', mult2),
-                                  choices = msel, selected=which2select[mult2]),
-                      plotOutput(paste0('kk', mult2))),
-               column(4,
-                      selectInput(paste0('k', mult3), paste0('Feature Variable C', mult3),
-                                  choices = msel, selected=which2select[mult3]),
-                      plotOutput(paste0('kk', mult3)))
-      )
+      # cluster/figure numbers (don't add extra plots on the last row)
+      plts <- (3*m - 2):min(3*m, input$kmean)
+      
+      # code for fluidRow entry
+      ui_code <- 
+        paste("fluidRow(",
+        paste0("  column(4,\n",
+               "         selectInput(inputId = 'k", plts, "',\n",
+               "                     label = 'Feature Variable C", plts, "',\n",
+               "                     choices = msel,\n",
+               "                     selected = which2select[", plts, "]),\n",
+               "         plotOutput(paste0('kk',", plts, ")))",
+               collapse = ',\n'),
+        ")", sep = '\n')
+        
+      eval(parse(text = ui_code))
     })
     do.call(tagList, plot_output_list)
   })
@@ -952,7 +917,7 @@ app_server <- function(input, output, session) {
     filename = 'Composition_plot_features.pdf',
     content = function(file) {
       grDevices::pdf(file, width=input$download_width, height=input$download_height)
-      print(cowplot::plot_grid(plotlist=glist(), ncol=3))
+      print(cowplot::plot_grid(plotlist=dimreduct(), ncol=3))
       grDevices::dev.off()
     })
   

@@ -245,3 +245,56 @@ compositionJF <- function(meta, kmeans_groups, colors)
   list(plotter = plotter,
        g1 = g1)
 }
+
+
+#' Plot a dimension reduction figure for JoesFlow
+#' 
+#' @param x Object containing clustered data (expects output from `prcomp`, `uamp`, or `Rtsne`)
+#' @param sample_data sample data
+#' @param features named vector, features in names(sample_data), names(features) = unique(kmeans_groups) -- names should be ordered
+#' @param ... Other objects passed along to functions within clusterJF
+#' 
+#' @return A ggplot object
+#' @export
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom rlang .data 
+dimreductJF <- function(x, sample_data, features, ...) {
+  UseMethod('dimreductJF')
+}
+
+# method for principal components object
+#' @rdname dimreductJF
+#' @method dimreductJF prcomp
+#' @export
+dimreductJF.prcomp <- function(x, sample_data, features, ...) {
+  dimreductJF(x$x, sample_data, features, ...)
+}
+
+# method for matrix object (output from `umap` or `Rtsne`)
+#' @rdname dimreductJF
+#' @method dimreductJF matrix
+#' @export
+dimreductJF.matrix <- function(x, sample_data, features, ...) {
+  # set up tibble for dimension reduction coordinates
+  plotter <- tibble(dim1 = x[,1],
+                    dim2 = x[,2])
+  
+  # create list of figures
+  glister <- list()
+  for(i in 1:length(features))
+  {
+    glister[[i]] <- mutate(plotter,
+                           feat = scale(sample_data[[features[i]]])) %>%
+      ggplot(aes(.data$dim1, .data$dim2, z = .data$feat)) +
+      stat_summary_hex() +
+      
+      theme_void() +
+      ggtitle(paste0('Cluster ', names(features)[i], '; ', features[i])) +
+      scale_fill_gradient(low = 'grey85', high = 'red3') +
+      guides(color = guide_legend(features[i])) +
+      theme(legend.position = 'right')
+  }
+  
+  return(glister)
+}
