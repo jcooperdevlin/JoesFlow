@@ -36,25 +36,43 @@ colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("defau
 
 ## JoesFlow Installation
 
-Install locally in RStudio
+### Installation via Docker
+
+The recommended method for running JoesFlow is using Docker, because the images provided have all system dependencies and R packages.
+
+* [Install Docker on your system.](https://docs.docker.com/get-docker/) This will require admin-level access. Using the WSL 2 backend is recommended for Windows computers.
+* Open Docker on your computer.
+* Mac OS
+  * Open Terminal.app
+* Windows
+  * Open the Windows PowerShell
+* Start JoesFlow with the following command: `docker run --user shiny --rm -ti -p 3838:3838 johnsonra/joes-flow`
+  * The first time you run this will take several minutes, as it will have to download the image to your computer. The next time you start it up should only take a few seconds.
+  * Update your local image (e.g. to update to a new version) with the following command: `docker pull johnsonra/joes-flow`
+* Once JoesFlow is running, open this page in your favorite browser: http://localhost:3838/JoesFlow
+* To shut down the Docker image when finished, you can enter the command `control-c` in the Terminal/PowerShell window and close it.
+
+
+### Installation via RStudio
+
+JoesFlow has a lot of dependencies, so in order to install locally in RStudio, you may need to install additional system tools and R packages for full functionality.
+
 ``` {r install, eval=FALSE}
-remotes::install_github("IDSS-NIAID/JoesFlow")
+remotes::install_github("NIAID/JoesFlow")
 ```
+
+Once installed, the Shiny app can be started up as follows:
 
 ```{r setup, eval=FALSE}
 library(JoesFlow)
 run_app()
 #> Loading required package: shiny
 #> 
-#> Attaching package: 'shiny'
-#> The following objects are masked from 'package:DT':
-#> 
-#>     dataTableOutput, renderDataTable
-#> 
-#> Listening on http://127.0.0.1:6897
+#> Listening on http://127.0.0.1:4322
 ```
 
 ![Joe's Flow Screenshot](README_files/setup-1.png)
+
 
 ## JoesFlow Functions
 
@@ -133,7 +151,6 @@ grid.arrange(um1, um2, nrow=1)
 ### Sample-based PCA
 
 ```{r sample based pca, fig.height=5, fig.width=12, fig.align="center"}
-# Figure out what purpose this serves...
 # sample-based pca
 groups_table <- with(sample_data, table(SampleID, kmeans_groups))
 

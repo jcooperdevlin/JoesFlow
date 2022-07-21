@@ -26,8 +26,8 @@ RUN R -e 'BiocManager::install("ComplexHeatmap", update=FALSE)'
 
 # install JoesFlow
 RUN R -e 'devtools::install_github("IDSS-NIAID/JoesFlow", upgrade="never", dependences = TRUE)'
-RUN wget https://raw.githubusercontent.com/IDSS-NIAID/JoesFlow/docker/shiny/server.R \ 
-         https://raw.githubusercontent.com/IDSS-NIAID/JoesFlow/docker/shiny/ui.R
+RUN wget https://raw.githubusercontent.com/NIAID/JoesFlow/docker/shiny/server.R \ 
+         https://raw.githubusercontent.com/NIAID/JoesFlow/docker/shiny/ui.R
 RUN mkdir /srv/shiny-server/JoesFlow
 RUN mv *.R /srv/shiny-server/JoesFlow/.
 
