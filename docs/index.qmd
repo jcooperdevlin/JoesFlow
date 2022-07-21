@@ -7,8 +7,6 @@ theme:
 editor: visual
 ---
 
-
-
 # Installing JoesFlow
 
 ## Installation via Docker
@@ -32,6 +30,7 @@ The recommended method for running JoesFlow is using Docker, because the images 
 JoesFlow has a lot of dependencies, so in order to install locally in RStudio, you may need to install additional system tools and R packages for full functionality.
 
 ``` {r install, eval=FALSE}
+# install directly from GitHub
 remotes::install_github("NIAID/JoesFlow")
 ```
 
@@ -42,7 +41,175 @@ library(JoesFlow)
 run_app()
 #> Loading required package: shiny
 #> 
-#> Listening on http://127.0.0.1:4322
+#> Listening on http://127.0.0.1:6610
 ```
 
-![Joe's Flow Screenshot](img/setup-1.png)
+![](img/setup-1.png)
+
+# Using JoesFlow
+
+```{r}
+#| echo: false
+#| message: false
+
+library(ggsci)
+library(RColorBrewer)
+
+colors_clusters <- c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
+colors_samples <- c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
+
+library(JoesFlow)
+library(uwot)
+
+# get root directory of the git repo
+root <- system('git rev-parse --show-toplevel', intern = TRUE)
+
+# set seed so that we get the same results every time
+set.seed(238479)
+```
+
+## Data format
+
+:::{.callout-important}
+Need documentation of expected data format
+:::
+
+### Flow data
+
+```{r test_data}
+#| echo: false
+sample_data <- paste0(root, '/tests/flow_test.csv') %>%
+  read.csv(sep=',', header=T)
+
+meta_data <- paste0(root, '/tests/metadata.csv') %>%
+  read.csv(header=T, sep=',')
+```
+
+Sample [flow file](https://github.com/NIAID/JoesFlow/blob/main/tests/flow_test.csv).
+```{r test_data output1}
+#| echo: false
+#| eval: false
+
+# code used to generate the following image
+datatable(sample_data[1:100,1:20])
+```
+![](img/test_data-1.png)
+
+### Metadata file
+
+Sample [metadata file](https://github.com/NIAID/JoesFlow/blob/main/tests/metadata.csv).
+```{r test_data output2}
+#| echo: false
+#| eval: false
+
+# code used to generate the following image
+datatable(meta_data)
+```
+![](img/test_data-2.png)
+
+
+```{r meta_data format}
+#| echo: false
+# Convert `meta_data` to named vector as expected by JoesFlow. This is taken care of automatically when loading meta data through the shiny app, assuming the first column contains IDs, and the second column contains Group designations.
+
+meta <- meta_data[,2]
+names(meta) <- meta_data[,1]
+```
+
+
+## JoesFlow output
+
+:::{.callout-important}
+Need documentation of JoesFlow output. A few figures are shown here, but there are additional outputs that need to be included, along with descriptions for each.
+:::
+
+
+### PCA figures
+
+```{r pca, fig.height = 5, fig.width = 12, fig.align = "center"}
+#| echo: false
+
+# PCA cluster
+pp <- select(sample_data, -SampleID) %>%
+  prcomp(scale=T)
+  
+pc1 <- clusterJF(pp, ids = sample_data$SampleID, 
+            meta = meta_data$Group, 
+            colors = colors_samples)
+ 
+# Kmeans cluster
+set.seed(23948)
+kmeans_groups <- select(sample_data, -SampleID) %>%
+  kmeans(10) %$% cluster %>%
+  {paste0('C', .)} # add a 'C' on the front of each group
+names(kmeans_groups) <- sample_data$SampleID
+  
+pc2 <- clusterJF(pp, ids = 1:nrow(sample_data),
+                 meta = kmeans_groups,
+                 colors = colors_clusters,
+                 legend.name = 'Kmeans')
+
+pc1 + pc2
+```
+
+### UMAP figures
+
+```{r umap, fig.height = 5, fig.width = 12, fig.align = "center"}
+#| echo: false
+
+# Umap
+mnist_umap <- select(sample_data, -SampleID) %>%
+  umap(pca = 15, fast_sgd = TRUE)
+
+um1 <- clusterJF(mnist_umap, ids = sample_data$SampleID,
+                 meta = meta_data$Group,
+                 colors = colors_samples)
+
+um2 <- clusterJF(mnist_umap, ids = 1:nrow(sample_data),
+                 meta = kmeans_groups,
+                 colors = colors_clusters,
+                 legend.name = 'Kmeans')
+
+um1 + um2
+```
+
+### Sample-based PCA
+
+```{r sample based pca, fig.height=5, fig.width=12, fig.align="center"}
+#| echo: false
+
+# sample-based pca
+groups_table <- with(sample_data, table(SampleID, kmeans_groups))
+
+pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
+  prcomp()
+
+gg3 <- sb_clusterJF(pp, ids = rownames(groups_table),
+                    meta = meta_data$Group,
+                    colors1 = colors_samples,
+                    colors2 = colors_clusters)
+
+gg3
+```
+
+### Composition plot
+
+```{r comp_plot, fig.height = 6, fig.width = 8, fig.align = "center"}
+#| echo: false
+compositionJF(meta, kmeans_groups, colors_clusters)$g1
+```
+
+![](img/comp_plot-2.png)
+
+### Heat plot
+
+```{r heat_plot, fig.height = 10, fig.width = 12, fig.align = "center"}
+#| echo: false
+# marker heat plot
+select(sample_data, -SampleID) %>%
+  marker_heatJF(ids = sample_data$SampleID,
+                meta = meta_data$Group,
+                kmeans_groups = kmeans_groups,
+                colors = colors_samples,
+                sample_size = 500)
+```
