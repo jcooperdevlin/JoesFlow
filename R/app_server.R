@@ -24,6 +24,7 @@
 #' 
 #' @import ggplot2
 #' @import patchwork
+#' @import hexbin
 #' @importFrom cowplot plot_grid
 #' @importFrom DT renderDT
 #' @importFrom DT renderDataTable
@@ -506,7 +507,7 @@ app_server <- function(input, output, session) {
     {
       # get coordinates from the correct dimension reduction method
       if(input$feat_dim=="PCA"){
-        x <- pca_coords()
+        x <- pca_coords()$x
       }
       if(input$feat_dim=="UMAP"){
         x <- umap_coords()
@@ -530,21 +531,6 @@ app_server <- function(input, output, session) {
     glister
   })
   
-  # this populates the figures for `Select Dimension Reduction`
-  observe({
-    # if a dimension reduction method has been selected
-    if(input$feat_dim %in% c("PCA", "UMAP", "tSNE")){
-      
-      # generate figures
-      glister <- dimreduct()
-      
-      # add generated figures to UI
-      lapply(1:input$kmean, function(i) {
-        output[[paste0('kk', i)]] <- renderPlot(glister[[i]])
-      })
-    }
-  })
-  
   # this is for the `Select Dimension Reduction` UI
   output$comp_ui <- renderUI({
     data_mat2=data_mat()[,-1]
@@ -561,7 +547,7 @@ app_server <- function(input, output, session) {
 
       orderer <- tibble(meansjj    = colMeans(data_mat2[   clusterjj,]),
                         meansOther = colMeans(data_mat2[clusterOther,]),
-                        diff = meansjj - meansOther,
+                        diff = .data$meansjj - .data$meansOther,
                         Feature=colnames(data_mat2)) %>%
         
         # sort such that the feature with the largest difference is at the top
@@ -575,7 +561,7 @@ app_server <- function(input, output, session) {
       which2select[jj] <- orderer$Feature[1]
     }
 
-    # generate UI elements for each cluster/feature
+    # generate UI elements for each cluster/feature (3 columns by howmanyrows rows)
     plot_output_list<-lapply(1:howmanyrows, function(m) {
       
       # cluster/figure numbers (don't add extra plots on the last row)
@@ -589,13 +575,25 @@ app_server <- function(input, output, session) {
                "                     label = 'Feature Variable C", plts, "',\n",
                "                     choices = msel,\n",
                "                     selected = which2select[", plts, "]),\n",
-               "         plotOutput(paste0('kk',", plts, ")))",
+               "         plotOutput('kk", plts, "'))",
                collapse = ',\n'),
         ")", sep = '\n')
         
       eval(parse(text = ui_code))
     })
     do.call(tagList, plot_output_list)
+  })
+  
+  # this populates the figures for `Select Dimension Reduction`
+  observe({
+    # if a dimension reduction method has been selected
+    if(input$feat_dim %in% c("PCA", "UMAP", "tSNE")){
+      
+      # add generated figures to UI
+      lapply(1:input$kmean, function(i) {
+        output[[paste0('kk', i)]] <- renderPlot(dimreduct()[[i]])
+      })
+    }
   })
   
     

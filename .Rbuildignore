@@ -9,3 +9,4 @@ README.Rmd
 Dockerfile
 ^shiny$
 ^docs$
+^index_files$

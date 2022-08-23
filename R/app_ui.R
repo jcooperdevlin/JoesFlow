@@ -173,6 +173,8 @@ app_ui <- function() {
                           )
                         )
                ),
+               # Warning message for the `tabPanel` section:
+               # Navigation containers expect a collection of `bslib::nav()`/`shiny::tabPanel()`s and/or `bslib::nav_menu()`/`shiny::navbarMenu()`s. Consider using `header` or `footer` if you wish to place content above (or below) every panel's contents.
                tabPanel(HTML(" </a></li><li><a href=\"https://www.niaid.nih.gov/research/png-loke-phd\">Type 2 Immunity Section, Laboratory of Parasitic Diseases, NIAID")),
                #tags$script(HTML("var header = $('.navbar> .container-fluid');
                #             header.append('<a <div style=\"float:right;color:#df691a\"><h3>https://www.niaid.nih.gov/research/png-loke-phd</h3><div></a>');
