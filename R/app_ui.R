@@ -1,42 +1,29 @@
 #' The application User-Interface
 #' 
-#' @param request Internal parameter for `{shiny}`. 
-#'     DO NOT REMOVE.
-#' @import shiny
-#' @noRd
-#' 
-#' 
-
-library(DT)
-library(shinythemes)
-
-loadingLogo <- function(href, src, loadingsrc, height = NULL, width = NULL, alt = NULL) {
+#' @export
+#' @importFrom shiny br
+#' @importFrom shiny brushOpts
+#' @importFrom shiny column
+#' @importFrom shiny downloadButton
+#' @importFrom shiny fileInput
+#' @importFrom shiny fluidRow
+#' @importFrom shiny h4
+#' @importFrom shiny HTML
+#' @importFrom shiny mainPanel
+#' @importFrom shiny navbarPage
+#' @importFrom shiny numericInput
+#' @importFrom shiny plotOutput
+#' @importFrom shiny selectInput
+#' @importFrom shiny selectizeInput
+#' @importFrom shiny sidebarPanel
+#' @importFrom shiny sliderInput
+#' @importFrom shiny tabsetPanel
+#' @importFrom shiny tabPanel
+#' @importFrom shiny tagList
+#' @importFrom shiny tags
+#' @importFrom shiny uiOutput
+app_ui <- function() {
   tagList(
-    tags$head(
-      tags$script(
-        "setInterval(function(){
-        if ($('html').attr('class')=='shiny-busy') {
-        $('div.busy').show();
-        $('div.notbusy').hide();
-        } else {
-        $('div.busy').hide();
-        $('div.notbusy').show();
-        }
-},100)")
-    ),
-    tags$a(href=href,
-           div(class = "busy",
-               img(src=loadingsrc,height = height, width = width, alt = alt)),
-           div(class = 'notbusy',
-               img(src = src, height = height, width = width, alt = alt))
-    )
-  )
-}
-
-app_ui <- function(request) {
-  tagList(
-    # Leave this function for adding external resources
-    golem_add_external_resources(),
     # Your application UI logic 
     navbarPage(title = "Joe's Flow", 
                tabPanel("Upload",
@@ -176,8 +163,6 @@ app_ui <- function(request) {
                                                                                   choices=c(" ", "PCA", "UMAP", "tSNE"), selected=" "))),
                                                fluidRow(column(12, uiOutput("comp_ui"))),
                                                fluidRow(column(6, downloadButton('comp_feat_download')))
-                                               #fluidRow(column(6, uiOutput("comp_ui")),
-                                               #          column(6, uiOutput(("comp_plots"))))
                                       ),
                                       tabPanel("Markers",
                                                fluidRow(column(12,
@@ -185,26 +170,11 @@ app_ui <- function(request) {
                                                ),
                                                fluidRow(column(6, downloadButton('heat_download')))
                                       )
-                                      #tabPanel("Markers",
-                                      #         fluidRow(column(12,
-                                      #                         DTOutput("de_feats"))),
-                                      #         fluidRow(
-                                      #           column(width=6,
-                                      #                  fluidRow(column(6, uiOutput("select_k")),
-                                      #                           column(6, uiOutput("select_p"))),
-                                      #                  fluidRow(column(6, selectInput('group_sel', "Split Columns",
-                                      #                                                 choices=c("Kmeans", "Group"),
-                                      #                                                 selected="Kmeans")),
-                                      #                           column(6, uiOutput("select_l")))
-                                      #                  ),
-                                      #           column(width = 6,
-                                      #                  fluidRow(column(12, plotOutput("diff_volc")))
-                                      #           )),
-                                      #         fluidRow(column(12, plotOutput("diff_heat", height = "700px")))
-                                      #)
                           )
                         )
                ),
+               # Warning message for the `tabPanel` section:
+               # Navigation containers expect a collection of `bslib::nav()`/`shiny::tabPanel()`s and/or `bslib::nav_menu()`/`shiny::navbarMenu()`s. Consider using `header` or `footer` if you wish to place content above (or below) every panel's contents.
                tabPanel(HTML(" </a></li><li><a href=\"https://www.niaid.nih.gov/research/png-loke-phd\">Type 2 Immunity Section, Laboratory of Parasitic Diseases, NIAID")),
                #tags$script(HTML("var header = $('.navbar> .container-fluid');
                #             header.append('<a <div style=\"float:right;color:#df691a\"><h3>https://www.niaid.nih.gov/research/png-loke-phd</h3><div></a>');
@@ -241,29 +211,3 @@ app_ui <- function(request) {
     )
   )
 }
-
-#' Add external Resources to the Application
-#' 
-#' This function is internally used to add external 
-#' resources inside the Shiny application. 
-#' 
-#' @import shiny
-#' @importFrom golem add_resource_path activate_js favicon bundle_resources
-#' @noRd
-golem_add_external_resources <- function(){
-  
-  add_resource_path(
-    'www', app_sys('app/www')
-  )
- 
-  tags$head(
-    favicon(),
-    bundle_resources(
-      path = app_sys('app/www'),
-      app_title = 'JoesFlow'
-    )
-    # Add here other external resources
-    # for example, you can add shinyalert::useShinyalert() 
-  )
-}
-
