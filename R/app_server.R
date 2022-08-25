@@ -372,47 +372,27 @@ app_server <- function(input, output, session) {
   
   tsne_coords<-reactive({
     withProgress({
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      mat = Rtsne::Rtsne(data_mat2, initial_dims=15, pca=TRUE, theta=1)$Y
+      
+      mat <- data_mat()[,-1] %>%
+        Rtsne::Rtsne(initial_dims=15, pca=TRUE, theta=1) %>%
+        .[['Y']]
+      
       colnames(mat)=c("tSNE_1", "tSNE_2")
+      
       mat
       
     }, message="Calculating tSNE")
   })
   
   output$tsne_plot = renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
     
-    tsne_df=tsne_coords()
-    plotter=data.frame(tSNE_1=tsne_df[,1], tSNE_2=tsne_df[,2], SampleID=ids)
-    
-    if(length(input$meta_val)>0){
-      grouper=meta_mat()[,input$meta_val]
-      
-      plotter$Group=as.character(plotter$SampleID)
-      samps=as.character(unique(plotter$SampleID))
-      for(jj in 1:length(samps)){
-        grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
-        grouper=as.character(grouper[,input$meta_val][1])
-        
-        plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-      }
-    } else {
-      plotter$Group=plotter$SampleID
-    }
-    
-    colors_samples2=colors_samples
-    
-    gg=ggplot(sample(plotter), aes(.data$tSNE_1, .data$tSNE_2, color=.data$Group)) +
-      geom_point() + theme_bw() +
-      scale_color_manual(values=colors_samples2) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
-    
+    gg <- tsne_coords() %>%
+      clusterJF(axis_prefix = 'tSNE',
+                ids = data_mat()[,1],
+                meta = meta_mat()[,input$meta_val],
+                colors = colors_samples,
+                legend.name = input$meta_val)
+
     vals$tsne_samps<-gg
     
     print(gg)
@@ -420,20 +400,13 @@ app_server <- function(input, output, session) {
   })
   
   output$tsne_k_plot = renderPlot({
-    data_mat2=data_mat()[,-1]
-    ids=data_mat()[,1]
-    data_mat2=data.matrix(data_mat2)
-    
-    tsne_df=tsne_coords()
-    plotter=data.frame(tSNE_1=tsne_df[,1], tSNE_2=tsne_df[,2], SampleID=ids)
-    
-    plotter$Kmeans=as.character(kmeaner())
-    
-    gg=ggplot(sample(plotter), aes(.data$tSNE_1, .data$tSNE_2, color=.data$Kmeans)) +
-      geom_point() + theme_bw() +
-      scale_color_manual(values=colors_clusters()) +
-      theme(axis.text=element_text(color='black', size=14),
-            axis.title=element_text(color='black', size=16))
+
+    gg <- tsne_coords() %>%
+      clusterJF(axis_prefix = 'tSNE',
+                ids = 1:nrow(data_mat()),
+                meta = kmeaner(),
+                colors = colors_clusters(),
+                legend.name = 'Cluster')
     
     vals$tsne_kmeans<-gg
     
