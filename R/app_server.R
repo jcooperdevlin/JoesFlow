@@ -140,11 +140,10 @@ app_server <- function(input, output, session) {
   
   # Visualize::number of clusters
   output$cluster_setting<-renderUI({
-    sliderInput("kmean",
+    numericInput("kmean",
                 "Number of clusters:",
                 value = 5,
-                min = 1,
-                max = 20)
+                min = 2)
   })
 
   
