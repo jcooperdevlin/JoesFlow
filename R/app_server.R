@@ -271,8 +271,9 @@ app_server <- function(input, output, session) {
 
     gg <- pca_coords() %>%
       clusterJF(ids = data_mat()[,1],
-                meta = meta_mat()[,2],
-                colors = colors_samples)
+                meta = meta_mat()[,input$meta_val],
+                colors = colors_samples,
+                legend.name = input$meta_val)
     
     vals$pca_samps<-gg
     
@@ -287,7 +288,7 @@ app_server <- function(input, output, session) {
       clusterJF(ids = 1:nrow(data_mat()),
                 meta = kmeaner(),
                 colors = colors_clusters(),
-                legend.name = 'Kmeans')
+                legend.name = 'Cluster')
     
     vals$pca_kmeans<-gg
     
@@ -315,7 +316,8 @@ app_server <- function(input, output, session) {
                  ids = rownames(sb_pca()$groups_table),
                  meta = as.character(meta_mat()[,input$meta_val]),
                  colors1 = colors_samples,
-                 colors2 = colors_clusters())
+                 colors2 = colors_clusters(),
+                 legend.name = input$meta_val)
     
   })
   output$samp_p_pca <- renderPlot({
@@ -345,9 +347,11 @@ app_server <- function(input, output, session) {
   output$umap_plot = renderPlot({
     
     gg <- umap_coords() %>%
-      clusterJF(ids = data_mat()[,1],
-                meta = meta_mat()[,2],
-                colors = colors_samples)
+      clusterJF(axis_prefix = 'UMAP',
+                ids = data_mat()[,1],
+                meta = meta_mat()[,input$meta_val],
+                colors = colors_samples,
+                legend.name = input$meta_val)
     
     vals$umap_samps<-gg
     
@@ -358,10 +362,11 @@ app_server <- function(input, output, session) {
   output$umap_k_plot = renderPlot({
     
     gg <- umap_coords() %>%
-      clusterJF(ids = 1:nrow(data_mat()),
+      clusterJF(axis_prefix = 'UMAP',
+                ids = 1:nrow(data_mat()),
                 meta = kmeaner(),
                 colors = colors_clusters(),
-                legend.name = 'Kmeans')
+                legend.name = 'Cluster')
     
     vals$umap_kmeans<-gg
     
