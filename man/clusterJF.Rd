@@ -11,7 +11,15 @@ clusterJF(clustered_data, ...)
 
 \method{clusterJF}{prcomp}(clustered_data, ids, meta, colors, legend.name = "Group", ...)
 
-\method{clusterJF}{matrix}(clustered_data, ids, meta, colors, legend.name = "Group", ...)
+\method{clusterJF}{matrix}(
+  clustered_data,
+  axis_prefix = "axis",
+  ids,
+  meta,
+  colors,
+  legend.name = "Group",
+  ...
+)
 
 \method{clusterJF}{tbl}(clustered_data, colors, xlab, ylab, legend.name, ...)
 }
@@ -27,6 +35,8 @@ clusterJF(clustered_data, ...)
 \item{colors}{Vector of colors for each group}
 
 \item{legend.name}{Character string for the legend name (default is 'Group')}
+
+\item{axis_prefix}{x-and y-axis prefix (e.g. 'UMAP_')}
 
 \item{xlab}{x-axis label}
 

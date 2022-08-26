@@ -7,6 +7,7 @@
 #' @param colors Vector of colors for each group
 #' @param xlab x-axis label
 #' @param ylab y-axis label
+#' @param axis_prefix x-and y-axis prefix (e.g. 'UMAP_')
 #' @param legend.name Character string for the legend name (default is 'Group')
 #' @param ... Other objects passed along to functions within clusterJF
 #' 
@@ -32,7 +33,7 @@ clusterJF.prcomp <- function(clustered_data, ids, meta, colors, legend.name = 'G
     
     # get group labels
     group_by(.data$SampleID) %>%
-    mutate(Group = meta[unique(.data$SampleID)]) %>%
+    mutate(Group = as.character(meta[unique(.data$SampleID)])) %>%
     ungroup()
 
   # proportion of variance
@@ -49,7 +50,7 @@ clusterJF.prcomp <- function(clustered_data, ids, meta, colors, legend.name = 'G
 #' @rdname clusterJF
 #' @method clusterJF matrix
 #' @export
-clusterJF.matrix <- function(clustered_data, ids, meta, colors, legend.name = 'Group', ...){
+clusterJF.matrix <- function(clustered_data, axis_prefix = 'axis', ids, meta, colors, legend.name = 'Group', ...){
   
   # format data for figure
   plotter <- tibble(X1       = clustered_data[,1],
@@ -58,11 +59,11 @@ clusterJF.matrix <- function(clustered_data, ids, meta, colors, legend.name = 'G
     
     # get group labels
     group_by(.data$SampleID) %>%
-    mutate(Group = meta[unique(.data$SampleID)]) %>%
+    mutate(Group = as.character(meta[unique(.data$SampleID)])) %>%
     ungroup()
   
   # render figure
-  clusterJF(plotter, colors, xlab = "UMAP_1", ylab = "UMAP_2", legend.name, ...)
+  clusterJF(plotter, colors, xlab = paste(axis_prefix, 1, sep = '_'), ylab = paste(axis_prefix, 2, sep = '_'), legend.name, ...)
 }
 
 # method for tibble object (should normally be called from clusterJF.prcomp or clusterJF.matrix)
@@ -90,6 +91,7 @@ clusterJF.tbl <- function(clustered_data, colors, xlab, ylab, legend.name, ...){
 #' @param meta Character vector containing metadata labels, corresponding to ids
 #' @param colors1 Vector of colors for samples
 #' @param colors2 Vector of colors for clusters
+#' @param legend.name Character string for the legend name (default is 'Group')
 #' 
 #' @return A ggplot object
 #' @export
@@ -97,7 +99,7 @@ clusterJF.tbl <- function(clustered_data, colors, xlab, ylab, legend.name, ...){
 #' @import ggplot2
 #' @importFrom ggrepel geom_label_repel
 #' @importFrom rlang .data 
-sb_clusterJF <- function(clustered_data, ids, meta, colors1, colors2) {
+sb_clusterJF <- function(clustered_data, ids, meta, colors1, colors2, legend.name = 'Group') {
   
   # format data for figure
   plotter <- tibble(PC1      = clustered_data$x[,'PC1'], 
@@ -116,7 +118,7 @@ sb_clusterJF <- function(clustered_data, ids, meta, colors1, colors2) {
   pp1 <- ggplot(plotter, aes(.data$PC1, .data$PC2, color=.data$Group, label=.data$SampleID)) +
     geom_point() + theme_bw() +
     geom_label_repel(size = 6) +
-    scale_color_manual(values=colors1) +
+    scale_color_manual(values=colors1, name = legend.name) +
     guides(color = guide_legend(override.aes = list(label = 'O', size = 3))) +
     xlab(paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)")) +
     ylab(paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)")) +
@@ -135,7 +137,7 @@ sb_clusterJF <- function(clustered_data, ids, meta, colors1, colors2) {
   pp2 <- ggplot(plotter, aes(.data$PC1, .data$PC2, color=.data$Label, label=.data$Label)) +
     geom_point() + theme_bw() +
     geom_label_repel(size = 6) +
-    scale_color_manual(values=colors2) +
+    scale_color_manual(values=colors2, name = 'Cluster') +
     guides(color = guide_legend(override.aes = list(label = 'O', size = 3))) +
     theme(axis.text=element_text(color='black', size=14),
           axis.title=element_text(color='black', size=16))
