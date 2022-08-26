@@ -4,7 +4,14 @@
 \alias{sb_clusterJF}
 \title{Sample-based PCA for JoesFlow}
 \usage{
-sb_clusterJF(clustered_data, ids, meta, colors1, colors2)
+sb_clusterJF(
+  clustered_data,
+  ids,
+  meta,
+  colors1,
+  colors2,
+  legend.name = "Group"
+)
 }
 \arguments{
 \item{clustered_data}{Object containing clustered data (expects output from `prcomp` or `umap`)}
@@ -16,6 +23,8 @@ sb_clusterJF(clustered_data, ids, meta, colors1, colors2)
 \item{colors1}{Vector of colors for samples}
 
 \item{colors2}{Vector of colors for clusters}
+
+\item{legend.name}{Character string for the legend name (default is 'Group')}
 }
 \value{
 A ggplot object
