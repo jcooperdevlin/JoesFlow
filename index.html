@@ -135,12 +135,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li>Open the Windows PowerShell</li>
 </ul></li>
-<li>Start JoesFlow with the following command: <code>docker run --user shiny --rm -ti -p 3838:3838 johnsonra/joes-flow</code>
+<li>Start JoesFlow with the following command: <code>docker run --user shiny --rm -ti -p 3838:3838 idssniaid/joes-flow</code>
 <ul>
 <li>The first time you run this will take several minutes, as it will have to download the image to your computer. The next time you start it up should only take a few seconds.</li>
-<li>Update your local image (e.g.&nbsp;to update to a new version) with the following command: <code>docker pull johnsonra/joes-flow</code></li>
+<li>Update your local image (e.g.&nbsp;to update to a new version) with the following command: <code>docker pull idssniaid/joes-flow</code></li>
+<li>These instructions assume you are running the <a href="https://hub.docker.com/repository/docker/idssniaid/joes-flow">production version of JoesFlow</a>. To run a <a href="https://hub.docker.com/repository/docker/johnsonra/joes-flow">development version</a>, which may grant early access to features as well as possible unresolved bugs, use the image tag, <code>johnsonra/joes-flow</code>.</li>
 </ul></li>
-<li>Once JoesFlow is running, open this page in your favorite browser: http://localhost:3838/JoesFlow</li>
+<li>Once JoesFlow is running, open this page in your favorite browser: <a href="http://localhost:3838/JoesFlow" class="uri">http://localhost:3838/JoesFlow</a></li>
 <li>To shut down the Docker image when finished, you can enter the command <code>control-c</code> in the Terminal/PowerShell window and close it.</li>
 </ul>
 </section>
@@ -167,6 +168,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell">
 
 </div>
+<section id="help" class="level2">
+<h2 class="anchored" data-anchor-id="help">Help</h2>
+<p>The following channels are available to get help with JoesFlow:</p>
+<ul>
+<li>Sign up for the <a href="https://list.nih.gov">JoesFlow mailing list</a> (search for “JoesFlow”)</li>
+<li><a href="https://github.com/niaid/JoesFlow/issues">Submit an issue on GitHub</a></li>
+</ul>
+</section>
 <section id="data-format" class="level2">
 <h2 class="anchored" data-anchor-id="data-format">Data format</h2>
 <div class="callout-important callout callout-style-default callout-captioned">
