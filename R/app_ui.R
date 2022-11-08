@@ -1,5 +1,5 @@
 #' The application User-Interface
-#' 
+#'
 #' @export
 #' @importFrom shiny br
 #' @importFrom shiny brushOpts
@@ -24,8 +24,8 @@
 #' @importFrom shiny uiOutput
 app_ui <- function() {
   tagList(
-    # Your application UI logic 
-    navbarPage(title = "Joe's Flow", 
+    # Your application UI logic
+    navbarPage(title = "Joe's Flow",
                tabPanel("Upload",
                         sidebarPanel(
                           fileInput("file1", "Choose Flow File",
@@ -39,8 +39,8 @@ app_ui <- function() {
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
                                       ".csv")
-                                    
-                                    
+
+
                           ),
                           sliderInput("subsample",
                                       "How much subsampling?",
@@ -62,7 +62,7 @@ app_ui <- function() {
                tabPanel("Visualize",
                         sidebarPanel(
                           uiOutput("meta_sel"),
-                          
+
                           #fluidRow(column(4,
                           #                numericInput("mean_cutoff", label = "Mean Cutoff",
                           #                             min=0,max=Inf, step = 1000, value = 0),
@@ -71,31 +71,31 @@ app_ui <- function() {
                           #                numericInput("var_cutoff", label = "Variance Cutoff",
                           #                             min=0,max=Inf, step = 1000, value = 0)
                           #                )),
-                          
-                          
+
+
                           br(),
-                          
+
                           # Input: Slider for the number of observations to generate ----
                           selectInput("clust_type", label = "Select Clustering Method",
                                       choices=c("Kmeans", "Hierarchical"), selected="Kmeans"),
                           uiOutput("cluster_setting"),
                           uiOutput("col_pal"),
-                          
+
                           fluidRow(downloadButton('pca_coord_download', label = "PCA coords")),
                           fluidRow(downloadButton('umap_coord_download', label = "UMAP coords")),
                           fluidRow(downloadButton('tsne_coord_download', label = "tSNE coords")),
-                          fluidRow(column(6, numericInput("download_height", "Download Height", 
+                          fluidRow(column(6, numericInput("download_height", "Download Height",
                                                           min=1, max=50, step=1, value=10)),
-                                   column(6, numericInput("download_width", "Download Width", 
+                                   column(6, numericInput("download_width", "Download Width",
                                                           min=1, max=50, step=1, value=15)))
-                          
+
                         ),
                         mainPanel(
                           tabsetPanel(type = "tabs",
-                                      tabPanel("Features", 
+                                      tabPanel("Features",
                                                fluidRow(column(6,
                                                                plotOutput("feats_plot")),
-                                                        column(6, 
+                                                        column(6,
                                                                plotOutput("sample_var"))),
                                                fluidRow(column(6, downloadButton('feat_download')))#,
                                                #plotOutput("feats_distr")
@@ -113,7 +113,7 @@ app_ui <- function() {
                                                         column(6, downloadButton("pca_download_loading", label='Download Loadings'))
                                                )
                                       ),
-                                      tabPanel("UMAP", 
+                                      tabPanel("UMAP",
                                                fluidRow(column(6,
                                                                plotOutput("umap_plot")),
                                                         column(6,
@@ -184,7 +184,7 @@ app_ui <- function() {
                                '.navbar-header {font-family: "Brush Script MT"}',
                                '.navbar-brand { font-size: 48px}',
                                '.navbar-nav > li > a, .navbar-brand {
-                              padding-top:30px !important; 
+                              padding-top:30px !important;
                             padding-bottom:0 !important;
                             height: 80px;
                            }',
