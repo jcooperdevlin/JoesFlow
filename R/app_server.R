@@ -38,6 +38,9 @@
 #' @importFrom fastcluster hclust
 #' @importFrom uwot umap
 #' @importFrom Rtsne Rtsne
+#'
+#' @importFrom stringi stri_read_raw
+#' @importFrom stringi stri_enc_detect
 app_server <- function(input, output, session) {
 
   colors_clusters_og = c(ggsci::pal_d3("category10")(10), ggsci::pal_d3("category20b")(20), ggsci::pal_igv("default")(51))
@@ -62,7 +65,6 @@ app_server <- function(input, output, session) {
     }
 
     tt
-
   })
 
   # Upload::choose metadata file
@@ -72,9 +74,18 @@ app_server <- function(input, output, session) {
     if (is.null(inFile))
       return(NULL)
 
-    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
-    tt
+    # check file encoding for odd characters (don't do this for flow files, as they tend to be very big)
+    enc <- stringi::stri_read_raw(inFile$datapath) %>%
+      stringi::stri_enc_detect()
 
+    if(enc[[1]]$Encoding[1] == 'UTF-8')
+    {
+      tt <- utils::read.csv(inFile$datapath)
+    }else{
+      tt <- utils::read.csv(inFile$datapath, encoding = 'latin1')
+    }
+
+    tt
   })
 
   # Visualize::colors
