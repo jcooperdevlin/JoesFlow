@@ -7,7 +7,7 @@ Authors@R: c(person('Cooper', 'Devlin', email = 'jcooperdevlin@gmail.com',
                     role = 'aut'))
 Description: Joes Flow simplified analysis for single cell modality data.
 License: MIT + file LICENSE
-Depends: stats, utils, dplyr, ggplot2, patchwork, hexbin
+Depends: R (>= 3.5), stats, utils, dplyr, ggplot2, patchwork, hexbin
 Imports: 
     circlize,
     ComplexHeatmap,

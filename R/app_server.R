@@ -250,8 +250,8 @@ app_server <- function(input, output, session) {
         kk=paste0("C", as.character(memb))
       }
 
-      names(kk) <- ids
-      kk
+      tibble(ids = ids,
+             grp = kk)
     }, message = "Calculating clusters")
   })
 
@@ -270,7 +270,8 @@ app_server <- function(input, output, session) {
 
     gg <- pca_coords() %>%
       clusterJF(ids = data_mat()[,1],
-                meta = meta_mat()[,input$meta_val],
+                meta = meta_mat(),
+                grp = input$meta_val,
                 colors = colors_samples,
                 legend.name = input$meta_val)
 
@@ -284,7 +285,7 @@ app_server <- function(input, output, session) {
   output$pca_k_plot = renderPlot({
 
     gg <- pca_coords() %>%
-      clusterJF(ids = 1:nrow(data_mat()),
+      clusterJF(ids = data_mat()[,1],
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),
@@ -301,7 +302,7 @@ app_server <- function(input, output, session) {
   # run the PCA
   sb_pca <- reactive({
 
-    groups_table <- table(data_mat()[,1], kmeaner())
+    groups_table <- table(kmeaner())
 
     pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
       stats::prcomp()
@@ -314,7 +315,8 @@ app_server <- function(input, output, session) {
 
     sb_clusterJF(sb_pca()$pp,
                  ids = rownames(sb_pca()$groups_table),
-                 meta = as.character(meta_mat()[,input$meta_val]),
+                 meta = meta_mat(),
+                 grp = input$meta_val,
                  colors1 = colors_samples,
                  colors2 = colors_clusters(),
                  legend.name = input$meta_val)
@@ -349,7 +351,8 @@ app_server <- function(input, output, session) {
     gg <- umap_coords() %>%
       clusterJF(axis_prefix = 'UMAP',
                 ids = data_mat()[,1],
-                meta = meta_mat()[,input$meta_val],
+                meta = meta_mat(),
+                grp = input$meta_val,
                 colors = colors_samples,
                 legend.name = input$meta_val)
 
@@ -363,7 +366,7 @@ app_server <- function(input, output, session) {
 
     gg <- umap_coords() %>%
       clusterJF(axis_prefix = 'UMAP',
-                ids = 1:nrow(data_mat()),
+                ids = data_mat()[,1],
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),
@@ -395,7 +398,8 @@ app_server <- function(input, output, session) {
     gg <- tsne_coords() %>%
       clusterJF(axis_prefix = 'tSNE',
                 ids = data_mat()[,1],
-                meta = meta_mat()[,input$meta_val],
+                meta = meta_mat(),
+                grp = input$meta_val,
                 colors = colors_samples,
                 legend.name = input$meta_val)
 
@@ -409,7 +413,7 @@ app_server <- function(input, output, session) {
 
     gg <- tsne_coords() %>%
       clusterJF(axis_prefix = 'tSNE',
-                ids = 1:nrow(data_mat()),
+                ids = data_mat()[,1],
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),

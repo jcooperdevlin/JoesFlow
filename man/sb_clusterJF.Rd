@@ -8,6 +8,7 @@ sb_clusterJF(
   clustered_data,
   ids,
   meta,
+  grp,
   colors1,
   colors2,
   legend.name = "Group"
@@ -18,7 +19,9 @@ sb_clusterJF(
 
 \item{ids}{Character vector of ids for each row in `clustered_data$x`, corresponding to labels in `meta`}
 
-\item{meta}{Character vector containing metadata labels, corresponding to ids}
+\item{meta}{Data frame containing metadata - first column corresponds to ids}
+
+\item{grp}{Column of meta to use for grouping of data}
 
 \item{colors1}{Vector of colors for samples}
 
