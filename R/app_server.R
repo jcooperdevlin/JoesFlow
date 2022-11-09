@@ -77,22 +77,6 @@ app_server <- function(input, output, session) {
 
   })
 
-  meta_vec <- reactive({
-    inFile <- input$file2
-
-    if (is.null(inFile))
-      return(NULL)
-
-    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
-
-    # first column: IDs
-    # second column: meta data
-    retval <- tt[,2]
-    names(retval) <- tt[,1]
-
-    retval
-  })
-
   # Visualize::colors
   output$col_pal <- renderUI({
     col_pals=c("Default",
@@ -383,8 +367,8 @@ app_server <- function(input, output, session) {
     withProgress({
 
       mat <- data_mat()[,-1] %>%
-        Rtsne::Rtsne(initial_dims=15, pca=TRUE, theta=1) %>%
-        .[['Y']]
+        Rtsne::Rtsne(initial_dims=15, pca=TRUE, theta=1)
+      mat <- mat[['Y']]
 
       colnames(mat)=c("tSNE_1", "tSNE_2")
 
@@ -429,7 +413,10 @@ app_server <- function(input, output, session) {
   ##### Composition #####
 
   composition_plot <- reactive({
-    compositionJF(meta_vec(), kmeaner(), colors_clusters())
+    compositionJF(meta = meta_mat(),
+                  grp = input$meta_val,
+                  kmeans_groups = kmeaner(),
+                  colors = colors_clusters())
   })
 
   plotter_melt <- reactive({
@@ -518,7 +505,7 @@ app_server <- function(input, output, session) {
   # this is for the `Select Dimension Reduction` UI
   output$comp_ui <- renderUI({
     data_mat2=data_mat()[,-1]
-    kmeans=as.character(kmeaner())
+    kmeans=as.character(kmeaner()$grp)
 
     msel=colnames(data_mat2)
     howmanyrows=ceiling(input$kmean/3)

@@ -115,8 +115,8 @@ clusterJF.tbl <- function(clustered_data, meta, grp, colors, xlab, ylab, legend.
 sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legend.name = 'Group') {
 
   # grouping labels
-  meta_grps <- tibble(id = meta[,1],
-                      grp = meta[,grp])
+  meta_grps <- tibble(id = meta[,1] %>% unlist(),
+                      grp = meta[,grp] %>% unlist())
 
   # format data for figure
   plotter <- tibble(PC1      = clustered_data$x[,'PC1'],
@@ -182,10 +182,6 @@ sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legen
 #' @importFrom rlang .data
 marker_heatJF <- function(sample_data, ids, meta, grp, kmeans_groups, colors, sample_size)
 {
-  # # grouping labels
-  # meta_grps <- tibble(id = meta[,1],
-  #                     grp = meta[,grp])
-
   # format data for figure
   plotter <- tibble(SampleID = factor(ids),             # want ids to run from 1:length(unique(ids))
                     Group = meta[as.numeric(.data$SampleID)],
@@ -227,19 +223,42 @@ marker_heatJF <- function(sample_data, ids, meta, grp, kmeans_groups, colors, sa
 
 #' Composition plot for Joes Flow
 #'
-#' @param meta Named character vector containing metadata labels. Names of each element of the vector should correspond to sample IDs and include all IDs in `kmeans_groups`.
+#' @param meta Data frame containing metadata labels. Names of each element of the vector should correspond to sample IDs and include all IDs in `kmeans_groups`.
+#' @param grp Column of meta to use for grouping of data
 #' @param kmeans_groups Named character vector containing Kmeans group label for each sample. Names of each element of the vector should correspond to sample IDs and include all IDs in `meta`.
 #' @param colors Vector of colors for clusters
 #'
 #' @return A ggplot object
 #' @export
 #' @importFrom rlang .data
-compositionJF <- function(meta, kmeans_groups, colors)
+compositionJF <- function(meta, grp, kmeans_groups, colors)
 {
-  plotter <- tibble(SampleID = names(kmeans_groups),
-                    cluster = kmeans_groups,
-                    Group = as.character(meta[.data$SampleID])) %>%
+  # grouping labels
+  meta_grps <- tibble(id = meta[,1] %>% unlist(),
+                      grp = meta[,grp] %>% unlist())
 
+  # data frame for plotting
+  plotter <- tibble(SampleID = kmeans_groups$ids,
+                    cluster = kmeans_groups$grp)
+
+  # get group labels
+  if(nrow(meta_grps) == nrow(plotter))  # Sometimes we get a list of groups for each row of plotter
+  {
+    # double check that these are sorted properly
+    if( any(meta_grps$id != plotter$SampleID))
+      stop("Group and sample IDs are not sorted properly")
+
+    plotter$Group <- meta_grps$grp
+  }else{                                       # other times we get a look up table with one row per sample ID
+    plotter <- plotter %>%
+      group_by(.data$SampleID) %>%
+      mutate(Group = meta_grps$grp[meta_grps$id == unique(.data$SampleID)] %>%
+               as.character()) %>%
+      ungroup()
+  }
+
+
+  plotter <- plotter %>%
     # count up totals for each cluster by group and sample ID
     group_by(.data$SampleID, .data$cluster, .data$Group) %>%
     dplyr::summarize(n = length(.data$Group)) %>%
@@ -254,7 +273,7 @@ compositionJF <- function(meta, kmeans_groups, colors)
     mutate(pct = 100 * .data$n / .data$N) %>%
 
     # get rid of these unneeded columns
-    dplyr::select(-.data$N, -.data$n)
+    dplyr::select(-"N", -"n")
 
 
   g1 <- ggplot(plotter, aes(.data$SampleID, .data$pct, fill=.data$cluster)) +
