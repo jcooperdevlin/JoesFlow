@@ -10,4 +10,4 @@ Dockerfile
 ^shiny$
 ^docs$
 ^index_files$
-^tests/testData$
+^inst/testData$

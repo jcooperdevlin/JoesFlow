@@ -5,18 +5,20 @@
 \title{save_flowdata
 Save flow data}
 \usage{
-save_flowdata(flow, meta, RData)
+save_flowdata(flow, meta, RData, compress = "gzip")
 }
 \arguments{
 \item{flow}{Path to flow data}
 
 \item{meta}{Path to metadata}
 
-\item{Rdata}{Path to output file}
+\item{RData}{Path to output file}
+
+\item{compress}{compression algorithm to use. Alternate compression algorithms may be recommended by `devtools::check()`}
 }
 \value{
 Returns `TRUE` when successful.
 }
 \description{
-Thie saves flow data and metadata to a .RData file for use in testing scripts
+This saves flow data and metadata to a .RData file for use in testing scripts
 }

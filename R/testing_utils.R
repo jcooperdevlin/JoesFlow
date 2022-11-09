@@ -8,15 +8,16 @@
 #' @param flow Path to flow data
 #' @param meta Path to metadata
 #' @param RData Path to output file
+#' @param compress compression algorithm to use. Alternate compression algorithms may be recommended by `devtools::check()`
 #'
 #' @return Returns `TRUE` when successful.
 #' @export
-save_flowdata <- function(flow, meta, RData)
+save_flowdata <- function(flow, meta, RData, compress = 'gzip')
 {
   sample_data <- utils::read.csv(flow)
   meta_data <- utils::read.csv(meta)
 
-  save(sample_data, meta_data, file = RData)
+  save(sample_data, meta_data, file = RData, compress = compress)
 
   invisible(TRUE)
 }
@@ -31,27 +32,26 @@ save_flowdata <- function(flow, meta, RData)
 #' @export
 setup_testing_data <- function()
 {
-  # package repository root directory
-  root <- system('git rev-parse --show-toplevel', intern = TRUE) %>%
-    paste0('/')
+  # paths
+  datadir <- system.file("data", package = 'JoesFlow')
+  extdata <- system.file("extdata", package = 'JoesFlow')
+  testdat <- system.file("testData", package = 'JoesFlow')
 
   # check / set up internal package data
-  test_data <- list('internal' = paste0(root, 'tests/test_data.RData'))
-  if(!file.exists(test_data$internal))
-    save_flowdata(paste0(root, 'tests/flow_test.csv'),
-                  paste0(root, 'tests/metadata.csv'),
-                  test_data$internal)
+  if(!file.exists(paste0(datadir, '/test_data.RData')))
+    save_flowdata(paste0(extdata, '/flow_test.csv'),
+                  paste0(extdata, '/metadata.csv'),
+                  paste0(datadir, '/test_data.RData'),
+                  compress = 'bzip2')
 
   # check / set up external testing data
-  if(file.exists(paste0(root, 'tests/testData')))
+  if(testdat != '')
   {
     # Issue 4: https://github.com/niaid/JoesFlow/issues/4
-    test_data$issue4 <- paste0(root, 'tests/testData/2022_11_08/issue4.RData')
-    if(!file.exists(test_data$issue4))
-      save_flowdata(paste0(root, 'tests/testData/2022_11_08/Flourscent Intensity.csv'),
-                    paste0(root, 'tests/testData/2022_11_08/Metadata.csv'),
-                    test_data$issue4)
+    if(!file.exists(paste0(datadir, '/issue4.RData')))
+      save_flowdata(paste0(testdat, '/2022_11_08/Flourscent Intensity.csv'),
+                    paste0(testdat, '/2022_11_08/Metadata.csv'),
+                    paste0(datadir, '/issue4.RData'),
+                    compress = 'xz')
   }
-
-  return(test_data)
 }
