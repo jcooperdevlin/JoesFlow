@@ -38,6 +38,9 @@
 #' @importFrom fastcluster hclust
 #' @importFrom uwot umap
 #' @importFrom Rtsne Rtsne
+#'
+#' @importFrom stringi stri_read_raw
+#' @importFrom stringi stri_enc_detect
 app_server <- function(input, output, session) {
 
   colors_clusters_og = c(ggsci::pal_d3("category10")(10), ggsci::pal_d3("category20b")(20), ggsci::pal_igv("default")(51))
@@ -62,7 +65,6 @@ app_server <- function(input, output, session) {
     }
 
     tt
-
   })
 
   # Upload::choose metadata file
@@ -72,25 +74,18 @@ app_server <- function(input, output, session) {
     if (is.null(inFile))
       return(NULL)
 
-    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
+    # check file encoding for odd characters (don't do this for flow files, as they tend to be very big)
+    enc <- stringi::stri_read_raw(inFile$datapath) %>%
+      stringi::stri_enc_detect()
+
+    if(enc[[1]]$Encoding[1] == 'UTF-8')
+    {
+      tt <- utils::read.csv(inFile$datapath)
+    }else{
+      tt <- utils::read.csv(inFile$datapath, encoding = 'latin1')
+    }
+
     tt
-
-  })
-
-  meta_vec <- reactive({
-    inFile <- input$file2
-
-    if (is.null(inFile))
-      return(NULL)
-
-    tt=utils::read.csv(inFile$datapath, header = T, sep=',')
-
-    # first column: IDs
-    # second column: meta data
-    retval <- tt[,2]
-    names(retval) <- tt[,1]
-
-    retval
   })
 
   # Visualize::colors
@@ -250,8 +245,8 @@ app_server <- function(input, output, session) {
         kk=paste0("C", as.character(memb))
       }
 
-      names(kk) <- ids
-      kk
+      tibble(ids = ids,
+             grp = kk)
     }, message = "Calculating clusters")
   })
 
@@ -270,7 +265,8 @@ app_server <- function(input, output, session) {
 
     gg <- pca_coords() %>%
       clusterJF(ids = data_mat()[,1],
-                meta = meta_mat()[,input$meta_val],
+                meta = meta_mat(),
+                grp = input$meta_val,
                 colors = colors_samples,
                 legend.name = input$meta_val)
 
@@ -284,7 +280,7 @@ app_server <- function(input, output, session) {
   output$pca_k_plot = renderPlot({
 
     gg <- pca_coords() %>%
-      clusterJF(ids = 1:nrow(data_mat()),
+      clusterJF(ids = data_mat()[,1],
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),
@@ -301,7 +297,7 @@ app_server <- function(input, output, session) {
   # run the PCA
   sb_pca <- reactive({
 
-    groups_table <- table(data_mat()[,1], kmeaner())
+    groups_table <- table(kmeaner())
 
     pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
       stats::prcomp()
@@ -314,7 +310,8 @@ app_server <- function(input, output, session) {
 
     sb_clusterJF(sb_pca()$pp,
                  ids = rownames(sb_pca()$groups_table),
-                 meta = as.character(meta_mat()[,input$meta_val]),
+                 meta = meta_mat(),
+                 grp = input$meta_val,
                  colors1 = colors_samples,
                  colors2 = colors_clusters(),
                  legend.name = input$meta_val)
@@ -349,7 +346,8 @@ app_server <- function(input, output, session) {
     gg <- umap_coords() %>%
       clusterJF(axis_prefix = 'UMAP',
                 ids = data_mat()[,1],
-                meta = meta_mat()[,input$meta_val],
+                meta = meta_mat(),
+                grp = input$meta_val,
                 colors = colors_samples,
                 legend.name = input$meta_val)
 
@@ -363,7 +361,7 @@ app_server <- function(input, output, session) {
 
     gg <- umap_coords() %>%
       clusterJF(axis_prefix = 'UMAP',
-                ids = 1:nrow(data_mat()),
+                ids = data_mat()[,1],
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),
@@ -380,8 +378,8 @@ app_server <- function(input, output, session) {
     withProgress({
 
       mat <- data_mat()[,-1] %>%
-        Rtsne::Rtsne(initial_dims=15, pca=TRUE, theta=1) %>%
-        .[['Y']]
+        Rtsne::Rtsne(initial_dims=15, pca=TRUE, theta=1)
+      mat <- mat[['Y']]
 
       colnames(mat)=c("tSNE_1", "tSNE_2")
 
@@ -395,7 +393,8 @@ app_server <- function(input, output, session) {
     gg <- tsne_coords() %>%
       clusterJF(axis_prefix = 'tSNE',
                 ids = data_mat()[,1],
-                meta = meta_mat()[,input$meta_val],
+                meta = meta_mat(),
+                grp = input$meta_val,
                 colors = colors_samples,
                 legend.name = input$meta_val)
 
@@ -409,7 +408,7 @@ app_server <- function(input, output, session) {
 
     gg <- tsne_coords() %>%
       clusterJF(axis_prefix = 'tSNE',
-                ids = 1:nrow(data_mat()),
+                ids = data_mat()[,1],
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),
@@ -425,7 +424,10 @@ app_server <- function(input, output, session) {
   ##### Composition #####
 
   composition_plot <- reactive({
-    compositionJF(meta_vec(), kmeaner(), colors_clusters())
+    compositionJF(meta = meta_mat(),
+                  grp = input$meta_val,
+                  kmeans_groups = kmeaner(),
+                  colors = colors_clusters())
   })
 
   plotter_melt <- reactive({
@@ -514,7 +516,7 @@ app_server <- function(input, output, session) {
   # this is for the `Select Dimension Reduction` UI
   output$comp_ui <- renderUI({
     data_mat2=data_mat()[,-1]
-    kmeans=as.character(kmeaner())
+    kmeans=as.character(kmeaner()$grp)
 
     msel=colnames(data_mat2)
     howmanyrows=ceiling(input$kmean/3)
