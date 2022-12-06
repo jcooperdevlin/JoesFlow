@@ -33,6 +33,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom RColorBrewer brewer.pal.info
 #'
 #' @importFrom ComplexHeatmap draw
 #' @importFrom fastcluster hclust
@@ -42,9 +43,6 @@
 #' @importFrom stringi stri_read_raw
 #' @importFrom stringi stri_enc_detect
 app_server <- function(input, output, session) {
-
-  colors_clusters_og = c(ggsci::pal_d3("category10")(10), ggsci::pal_d3("category20b")(20), ggsci::pal_igv("default")(51))
-  colors_samples = c(RColorBrewer::brewer.pal(5, "Set1"), RColorBrewer::brewer.pal(8, "Dark2"), ggsci::pal_igv("default")(51))
 
   options(shiny.maxRequestSize=1000*1024^2)
 
@@ -90,31 +88,35 @@ app_server <- function(input, output, session) {
 
   # Visualize::colors
   output$col_pal <- renderUI({
-    col_pals=c("Default",
-               "Blues", "BuGn", "BuPu", "GnBu", "Greens", "Greys", "Oranges",
-               "OrRd", "PuBu", "PuBuGn", "PuRd", "Purples", "RdPu", "Reds",
-               "YlGn", "YlGnBu", "YlOrBr", "YlOrRd", "Accent", "Dark2", "Paired",
-               "Pastel1", "Pastel2", "Set1", "Set2", "Set3", "BrBG", "PiYG",
-               "PRGn", "PuOr", "RdBu", "RdGy", "RdYlBu", "RdYlGn", "Spectral"
-    )
+    col_pals=c("Default", rownames(RColorBrewer::brewer.pal.info)[RColorBrewer::brewer.pal.info$colorblind &
+                                                                  RColorBrewer::brewer.pal.info$category == 'qual'])
 
     selectInput("colpal", "Select Color Palette",
                 choices=col_pals, selected = "Default")
   })
 
   colors_clusters <- reactive({
-    if(input$colpal=="Default"){
-      colors_sel=colors_clusters_og
-    } else {
-      if(length(unique(kmeaner()))<8){
-        colors_sel=RColorBrewer::brewer.pal(n = length(unique(kmeaner())), name = input$colpal)
-      } else {
-        col1=RColorBrewer::brewer.pal(n = 8, name = input$colpal)
-        col2=sample(colors_clusters_og, (length(unique(kmeaner()))-8))
-        colors_sel=c(col1,col2)
-      }
+    if(input$colpal=="Default")
+    {
+      colors_sel <- c(ggsci::pal_d3("category10")(10), ggsci::pal_d3("category20b")(20), ggsci::pal_igv("default")(51))
+    }else{
+      # total number of colors to choose from for this pallet
+      n_unique_colors <- RColorBrewer::brewer.pal(n = RColorBrewer::brewer.pal.info[input$colpal,'maxcolors'],
+                                                name = input$colpal)
+
+      # pull colors from brewer.pal
+      colors_sel = RColorBrewer::brewer.pal(n = n_unique_colors, name = input$colpal)
     }
-    colors_sel
+
+    # make sure we have enough colors (repeat if necessary)
+    rep(colors_sel, length.out = input$kmean)
+  })
+
+  colors_samples <- reactive({
+    colors_sel <- c(RColorBrewer::brewer.pal(5, "Set1"), RColorBrewer::brewer.pal(8, "Dark2"), ggsci::pal_igv("default")(51))
+
+    # make sure we have enough colors (repeat if necessary)
+    rep(colors_sel, length.out = length(unique(meta_mat()[,input$meta_val])))
   })
 
   # Visualize::meta-data group variable
@@ -267,7 +269,7 @@ app_server <- function(input, output, session) {
       clusterJF(ids = data_mat()[,1],
                 meta = meta_mat(),
                 grp = input$meta_val,
-                colors = colors_samples,
+                colors = colors_samples(),
                 legend.name = input$meta_val)
 
     vals$pca_samps<-gg
@@ -312,7 +314,7 @@ app_server <- function(input, output, session) {
                  ids = rownames(sb_pca()$groups_table),
                  meta = meta_mat(),
                  grp = input$meta_val,
-                 colors1 = colors_samples,
+                 colors1 = colors_samples(),
                  colors2 = colors_clusters(),
                  legend.name = input$meta_val)
 
@@ -348,7 +350,7 @@ app_server <- function(input, output, session) {
                 ids = data_mat()[,1],
                 meta = meta_mat(),
                 grp = input$meta_val,
-                colors = colors_samples,
+                colors = colors_samples(),
                 legend.name = input$meta_val)
 
     vals$umap_samps<-gg
@@ -395,7 +397,7 @@ app_server <- function(input, output, session) {
                 ids = data_mat()[,1],
                 meta = meta_mat(),
                 grp = input$meta_val,
-                colors = colors_samples,
+                colors = colors_samples(),
                 legend.name = input$meta_val)
 
     vals$tsne_samps<-gg
@@ -586,7 +588,7 @@ app_server <- function(input, output, session) {
                                     ids = data_mat()[,1],
                                    meta = meta_mat()[,input$meta_val],
                           kmeans_groups = kmeaner(),
-                                 colors = colors_samples,
+                                 colors = colors_samples(),
                             sample_size = 500)
 
       vals$marker_heat <-h1 %>%
