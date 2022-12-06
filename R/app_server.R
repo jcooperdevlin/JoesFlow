@@ -57,6 +57,8 @@ app_server <- function(input, output, session) {
     if (is.null(inFile))
       return(NULL)
 
+    set.seed(input$seed)
+
     tt=utils::read.csv(inFile$datapath, header = T, sep=',')
     if(input$subsample<1){
       tt=tt[sample(rownames(tt), nrow(tt)*input$subsample),]
@@ -238,6 +240,9 @@ app_server <- function(input, output, session) {
       data_mat2=data_mat()[,-1]
       ids=data_mat()[,1]
       data_mat2=data.matrix(data_mat2)
+
+      set.seed(input$seed)
+
       if(input$clust_type=="Kmeans"){
         kmeaner=kmeans(data_mat2, input$kmean)
         kk=paste0("C", kmeaner$cluster)
@@ -336,6 +341,8 @@ app_server <- function(input, output, session) {
   umap_coords<-reactive({
     withProgress({
 
+      set.seed(input$seed)
+
       data_mat()[,-1] %>%
         uwot::umap(pca = min(15, ncol(data_mat())-1), fast_sgd = TRUE)
 
@@ -378,6 +385,8 @@ app_server <- function(input, output, session) {
 
   tsne_coords<-reactive({
     withProgress({
+
+      set.seed(input$seed)
 
       mat <- data_mat()[,-1] %>%
         Rtsne::Rtsne(initial_dims=15, pca=TRUE, theta=1)
@@ -584,6 +593,7 @@ app_server <- function(input, output, session) {
   ##### Markers #####
   output$marker_heat <- renderPlot({
     withProgress({
+      set.seed(input$seed)
       h1 <- marker_heatJF(  sample_data = data_mat()[,-1],
                                     ids = data_mat()[,1],
                                    meta = meta_mat()[,input$meta_val],

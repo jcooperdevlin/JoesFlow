@@ -87,7 +87,9 @@ app_ui <- function() {
                           fluidRow(column(6, numericInput("download_height", "Download Height",
                                                           min=1, max=50, step=1, value=10)),
                                    column(6, numericInput("download_width", "Download Width",
-                                                          min=1, max=50, step=1, value=15)))
+                                                          min=1, max=50, step=1, value=15))),
+
+                          numericInput('seed', 'Random Seed:', value = 247893, min = 1)
 
                         ),
                         mainPanel(
