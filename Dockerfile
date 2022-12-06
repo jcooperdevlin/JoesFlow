@@ -46,10 +46,11 @@ RUN R -e 'install.packages(\
   repos="https://packagemanager.rstudio.com/all/2022-11-08+Y3JhbiwyOjQ1MjYyMTU7NDcyMTMxRQ")'
 
 # copy R package to image
-RUN mkdir JoesFlow JoesFlow/man JoesFlow/R
+RUN mkdir JoesFlow JoesFlow/man JoesFlow/R JoesFlow/inst
 COPY DESCRIPTION LICENSE NAMESPACE JoesFlow/.
 COPY R/* JoesFlow/R/.
 COPY man/* JoesFlow/man/.
+COPY inst/extdata/* JoesFlow/inst/.
 
 # install JoesFlow
 RUN mkdir /srv/shiny-server/JoesFlow

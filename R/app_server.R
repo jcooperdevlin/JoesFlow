@@ -74,7 +74,7 @@ app_server <- function(input, output, session) {
     if (is.null(inFile))
       return(NULL)
 
-    # check file encoding for odd characters (don't do this for flow files, as they tend to be very big)
+    # check file encoding for odd characters (don't do this for flow files, as they tend to be very big and pretty much all numeric)
     enc <- stringi::stri_read_raw(inFile$datapath) %>%
       stringi::stri_enc_detect()
 
