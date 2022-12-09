@@ -651,58 +651,36 @@ app_server <- function(input, output, session) {
   output$pca_download_vals = downloadHandler(
     filename = 'sample_PCA_values.txt',
     content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
+      # grouping labels
+      meta_grps <- tibble(id = meta_mat()[,1] %>% unlist(),
+                          grp = meta_mat()[,input$meta_val] %>% unlist())
 
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
+      # pull principal components from sb_pca()
+      tibble(PC1      = sb_pca()$pp$x[,'PC1'],
+             PC2      = sb_pca()$pp$x[,'PC2'],
+             SampleID = rownames(sb_pca()$groups_table)) %>%
 
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$x)
-      colnames(plotter)=paste0("PC", 1:ncol(plotter))
-      plotter$SampleID=totaler$ids
+        # add grouping information
+        group_by(.data$SampleID) %>%
+        mutate(Group = meta_grps$grp[meta_grps$id == unique(.data$SampleID)] %>%
+                 as.character()) %>%
+        ungroup() %>%
 
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+        # write file
+        utils::write.table(file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   output$pca_download_loading = downloadHandler(
     filename = 'sample_PCA_loadings.txt',
     content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
 
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
+      # pull loadings from sb_pca()
+      tibble(Cluster = rownames(sb_pca()$pp$rotation),
+             PC1     = sb_pca()$pp$rotation[,'PC1'],
+             PC2     = sb_pca()$pp$rotation[,'PC2']) %>%
 
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$rotation)
-
-      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
+        # write file
+        utils::write.table(file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   ## UMAP ##
