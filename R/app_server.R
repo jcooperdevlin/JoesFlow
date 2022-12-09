@@ -615,8 +615,11 @@ app_server <- function(input, output, session) {
   output$pca_download = downloadHandler(
     filename = 'PCA_plots.png',
     content = function(file) {
-      ggsave(file, plot = {(vals$pca_samps + vals$pca_kmeans) / vals$pca_clusters},
-             width = input$download_width, height = input$download_height, units = "in")
+      ggsave(file,
+             plot = {(vals$pca_samps + vals$pca_kmeans) / vals$pca_clusters},
+             width = input$download_width,
+             height = input$download_height,
+             units = "in")
     })
 
   output$pca_coord_download = downloadHandler(
@@ -644,29 +647,15 @@ app_server <- function(input, output, session) {
     })
 
   ## Sample-based PCA ##
-  sb_pca_download <- reactive({
-
-  })
-
   output$pca_download_vals = downloadHandler(
     filename = 'sample_PCA_values.txt',
     content = function(file) {
-      # grouping labels
-      meta_grps <- tibble(id = meta_mat()[,1] %>% unlist(),
-                          grp = meta_mat()[,input$meta_val] %>% unlist())
 
-      # pull principal components from sb_pca()
-      tibble(PC1      = sb_pca()$pp$x[,'PC1'],
-             PC2      = sb_pca()$pp$x[,'PC2'],
-             SampleID = rownames(sb_pca()$groups_table)) %>%
+      extract_sb_values(clustered_data = sb_pca()$pp,
+                        ids            = rownames(sb_pca()$groups_table),
+                        meta           = meta_mat(),
+                        grp            = input$meta_val) %>%
 
-        # add grouping information
-        group_by(.data$SampleID) %>%
-        mutate(Group = meta_grps$grp[meta_grps$id == unique(.data$SampleID)] %>%
-                 as.character()) %>%
-        ungroup() %>%
-
-        # write file
         utils::write.table(file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 

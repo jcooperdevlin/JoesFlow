@@ -114,20 +114,8 @@ clusterJF.tbl <- function(clustered_data, meta, grp, colors, xlab, ylab, legend.
 #' @importFrom rlang .data
 sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legend.name = 'Group') {
 
-  # grouping labels
-  meta_grps <- tibble(id = meta[,1] %>% unlist(),
-                      grp = meta[,grp] %>% unlist())
-
-  # format data for figure
-  plotter <- tibble(PC1      = clustered_data$x[,'PC1'],
-                    PC2      = clustered_data$x[,'PC2'],
-                    SampleID = ids) %>%
-
-    # get group labels
-    group_by(.data$SampleID) %>%
-    mutate(Group = meta_grps$grp[meta_grps$id == unique(.data$SampleID)] %>%
-             as.character()) %>%
-    ungroup()
+  # extract data for figure
+  plotter <- extract_sb_values(clustered_data, ids, meta, grp)
 
   # proportion of variance
   PoV <- with(clustered_data, sdev^2 / sum(sdev^2))
