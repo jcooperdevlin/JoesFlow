@@ -5,13 +5,13 @@
 
 
 #' extract_sb_values
-#' Extract values from sample based PCA results
+#' Extract values from sample based PCA
 #'
 #' @param clustered_data Object containing clustered data (expects output from `prcomp`)
 #' @param ids Character vector of ids for each row in `clustered_data$x`, corresponding to labels in `grps`
 #' @param meta Data frame containing translation from id to group
 #' @param grp Character value identifying the column of `meta` to use for group identifier
-#' @value a data frame with values for PC1, PC2, SampleID, and Group
+#' @value a data frame with values for SampleID, and Group, PC1, and PC2
 #' @export
 extract_sb_values <- function(clustered_data, ids, meta, grp)
 {
@@ -26,8 +26,20 @@ extract_sb_values <- function(clustered_data, ids, meta, grp)
              as.character()) %>%
     ungroup() %>%
 
-    select(SampleID, Group, PC1, PC2)
+    dplyr::select(SampleID, Group, PC1, PC2)
 }
 
 
 #' extract_sb_loadings
+#' Extract loadings from sample based PCA
+#'
+#' @param clustered_data Object containing clustered data (expects output from `prcomp`)
+#' @value a data frame with loadings for PC1 and PC2 for each Cluster
+#' @export
+extract_sb_loadings <- function(clustered_data)
+{
+  # pull loadings from clustered_data
+  tibble(Cluster = rownames(clustered_data$rotation),
+         PC1     = clustered_data$rotation[,'PC1'],
+         PC2     = clustered_data$rotation[,'PC2'])
+}

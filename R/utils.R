@@ -140,10 +140,11 @@ sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legen
   PoV <- with(clustered_data, sdev^2 / sum(sdev^2))
 
   # render figure
-  pp2 <- ggplot(plotter, aes(.data$PC1, .data$PC2, color=.data$Label, label=.data$Label)) +
+  pp2 <- extract_sb_loadings(clustered_data) %>%
+    ggplot(aes(.data$PC1, .data$PC2, color=.data$Cluster, label=.data$Cluster)) +
     geom_point() + theme_bw() +
     geom_label_repel(size = 6) +
-    scale_color_manual(values=colors2, name = 'Cluster') +
+    scale_color_manual(values=colors2) +
     guides(color = guide_legend(override.aes = list(label = 'O', size = 3))) +
     theme(axis.text=element_text(color='black', size=14),
           axis.title=element_text(color='black', size=16))

@@ -662,13 +662,7 @@ app_server <- function(input, output, session) {
   output$pca_download_loading = downloadHandler(
     filename = 'sample_PCA_loadings.txt',
     content = function(file) {
-
-      # pull loadings from sb_pca()
-      tibble(Cluster = rownames(sb_pca()$pp$rotation),
-             PC1     = sb_pca()$pp$rotation[,'PC1'],
-             PC2     = sb_pca()$pp$rotation[,'PC2']) %>%
-
-        # write file
+      extract_sb_loadings(sb_pca()$pp) %>%
         utils::write.table(file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
