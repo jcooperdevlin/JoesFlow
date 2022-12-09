@@ -49,12 +49,6 @@ app_ui <- function() {
                                       max = 1)
                         ),
                         mainPanel(
-                          #tags$head(tags$style(
-                          #  "#contents{color: #df691a; font-size: 18px}",
-                          #  "#DataTables_Table_0_filter{color: #df691a; font-size: 18px}",
-                          #  "#DataTables_Table_0_info{color: #df691a; font-size: 18px}",
-                          #  "#DataTables_Table_0_length{color: #df691a; font-size: 18px}",
-                          #  "#DataTables_Table_0_paginate{color: #df691a; font-size: 18px}")),
                           DT::DTOutput('contents'),
                           DT::DTOutput('metadata')
                         )
@@ -62,16 +56,6 @@ app_ui <- function() {
                tabPanel("Visualize",
                         sidebarPanel(
                           uiOutput("meta_sel"),
-
-                          #fluidRow(column(4,
-                          #                numericInput("mean_cutoff", label = "Mean Cutoff",
-                          #                             min=0,max=Inf, step = 1000, value = 0),
-                          #                numericInput("SD_cutoff", label = "SD Cutoff",
-                          #                             min=0,max=Inf, step = 50, value = 0),
-                          #                numericInput("var_cutoff", label = "Variance Cutoff",
-                          #                             min=0,max=Inf, step = 1000, value = 0)
-                          #                )),
-
 
                           br(),
 
@@ -99,8 +83,7 @@ app_ui <- function() {
                                                                plotOutput("feats_plot")),
                                                         column(6,
                                                                plotOutput("sample_var"))),
-                                               fluidRow(column(6, downloadButton('feat_download')))#,
-                                               #plotOutput("feats_distr")
+                                               fluidRow(column(6, downloadButton('feat_download')))
                                       ),
                                       tabPanel("PCA",
                                                fluidRow(column(6,
@@ -147,11 +130,7 @@ app_ui <- function() {
                                                  column(width = 12,
                                                         h4("Click & Drag for plot details"),
                                                         DT::dataTableOutput("click_info")
-                                                 )#,
-                                                 #column(width = 0,
-                                                 #        h4("Brushed points"),
-                                                 #        verbatimTextOutput("brush_info")
-                                                 # )
+                                                 )
                                                ),
                                                fluidRow(column(12,
                                                                plotOutput("composition_ui",
