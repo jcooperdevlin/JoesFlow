@@ -625,38 +625,29 @@ app_server <- function(input, output, session) {
   output$pca_coord_download = downloadHandler(
     filename = 'PCA_coords.txt',
     content = function(file) {
-      pp=pca_coords()
-      ids=data_mat()[,1]
-      plotter=data.frame(PC1=pp$x[,1], PC2=pp$x[,2], SampleID=ids)
-      plotter$Kmeans=as.character(kmeaner())
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
 
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
+      extract_values(clustered_data = pca_coords(),
+                     ids            = data_mat()[,1],
+                     meta           = meta_mat(),
+                     grp            = input$meta_val) %>%
 
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(plotter, file, sep='\t', quote=F, row.names=F)
+        rename(PC1 = X1, PC2 = X2) %>%
+
+        utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })
 
   ## Sample-based PCA ##
+  sb_vals <- reactive({
+    extract_sb_values(clustered_data = sb_pca()$pp,
+                      ids            = rownames(sb_pca()$groups_table),
+                      meta           = meta_mat(),
+                      grp            = input$meta_val)
+  })
+
   output$pca_download_vals = downloadHandler(
     filename = 'sample_PCA_values.txt',
     content = function(file) {
-
-      extract_sb_values(clustered_data = sb_pca()$pp,
-                        ids            = rownames(sb_pca()$groups_table),
-                        meta           = meta_mat(),
-                        grp            = input$meta_val) %>%
-
-        utils::write.table(file=file, row.names=FALSE, quote=FALSE, sep='\t')
+      utils::write.table(sb_vals, file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   output$pca_download_loading = downloadHandler(
@@ -682,85 +673,28 @@ app_server <- function(input, output, session) {
   output$umap_coord_download = downloadHandler(
     filename = 'UMAP_coords.txt',
     content = function(file) {
-      pp=umap_coords()
-      ids=data_mat()[,1]
-      plotter=data.frame(pp, SampleID=ids)
-      plotter$Kmeans=as.character(kmeaner())
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
+      extract_values(clustered_data = umap_coords(),
+                     ids            = data_mat()[,1],
+                     meta           = meta_mat(),
+                     grp            = input$meta_val) %>%
 
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
+        rename(UMAP_1 = X1, UMAP_2 = X2) %>%
 
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(umap_coords(), file, sep='\t', quote=F, row.names=F)
+        utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })
 
   output$umap_download_vals = downloadHandler(
     filename = 'sample_PCA_values.txt',
     content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$x)
-      colnames(plotter)=paste0("PC", 1:ncol(plotter))
-      plotter$SampleID=totaler$ids
-
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+      utils::write.table(sb_vals, file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   output$umap_download_loading = downloadHandler(
     filename = 'sample_PCA_loadings.txt',
     content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$rotation)
-
-      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
+      extract_sb_loadings(sb_pca()$pp) %>%
+        utils::write.table(file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
-
 
   ## TSNE ##
   output$tsne_download = downloadHandler(
@@ -775,95 +709,41 @@ app_server <- function(input, output, session) {
       grDevices::dev.off()
     })
 
+  output$tsne_coord_download = downloadHandler(
+    filename = 'TSNE_coords.txt',
+    content = function(file) {
+      extract_values(clustered_data = tsne_coords(),
+                     ids            = data_mat()[,1],
+                     meta           = meta_mat(),
+                     grp            = input$meta_val) %>%
+
+        rename(tSNE_1 = X1, tSNE_2 = X2) %>%
+
+        utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
+    })
+
   output$tsne_download_vals = downloadHandler(
     filename = 'sample_PCA_values.txt',
     content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$x)
-      colnames(plotter)=paste0("PC", 1:ncol(plotter))
-      plotter$SampleID=totaler$ids
-
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(plotter, file=file, row.names=F, quote=F, sep='\t')
+      utils::write.table(sb_vals, file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   output$tsne_download_loading = downloadHandler(
     filename = 'sample_PCA_loadings.txt',
     content = function(file) {
-      data_mat2=data_mat()[,-1]
-      ids=data_mat()[,1]
-      data_mat2=data.matrix(data_mat2)
-      kmeans=as.character(kmeaner())
-
-      totaler=data.frame(table(ids))
-      k_df = data.frame(table(kmeans, ids))
-      k_mat = reshape2::dcast(k_df, ids ~ kmeans)
-
-      k_mat=k_mat[,-1]
-      k_add=apply(k_mat, 2, function(x){(x/totaler$Freq)*100})
-
-      pp=stats::prcomp(k_add)
-      plotter=data.frame(pp$rotation)
-
-      utils::write.table(plotter, file=file, row.names=T, quote=F, sep='\t')
-    })
-
-  output$tsne_coord_download = downloadHandler(
-    filename = 'TSNE_coords.txt',
-    content = function(file) {
-      pp=tsne_coords()
-      ids=data_mat()[,1]
-      plotter=data.frame(pp, SampleID=ids)
-      plotter$Kmeans=as.character(kmeaner())
-      if(length(input$meta_val)>0){
-        grouper=meta_mat()[,input$meta_val]
-
-        plotter$Group=as.character(plotter$SampleID)
-        samps=as.character(unique(plotter$SampleID))
-        for(jj in 1:length(samps)){
-          grouper=dplyr::filter(meta_mat(), .data$ID==samps[jj])
-          grouper=as.character(grouper[,input$meta_val][1])
-
-          plotter$Group[plotter$SampleID==samps[jj]]<-grouper
-        }
-      } else {
-        plotter$Group=plotter$SampleID
-      }
-      utils::write.table(tsne_coords(), file, sep='\t', quote=F, row.names=F)
+      extract_sb_loadings(sb_pca()$pp) %>%
+        utils::write.table(file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   ## Composition ##
   output$comp_download = downloadHandler(
     filename = 'Composition_plot.pdf',
     content = function(file) {
-      grDevices::pdf(file, width=input$download_width, height=input$download_height)
-      print(vals$comp_plot)
-      grDevices::dev.off()
+      ggsave(file,
+             plot = vals$comp_plot,
+             width = input$download_width,
+             height = input$download_height,
+             units = "in")
     })
 
   output$comp_feat_download = downloadHandler(
