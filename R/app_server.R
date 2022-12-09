@@ -30,8 +30,6 @@
 #' @importFrom DT renderDataTable
 #' @importFrom ggsci pal_d3
 #' @importFrom ggsci pal_igv
-#' @importFrom gridExtra grid.arrange
-#' @importFrom gridExtra arrangeGrob
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom RColorBrewer brewer.pal.info
 #'
@@ -227,11 +225,11 @@ app_server <- function(input, output, session) {
   output$feat_download = downloadHandler(
     filename = 'FeaturePlot.pdf',
     content = function(file) {
-      grDevices::pdf(file, width=input$download_width, height=input$download_height)
-      print(
-        gridExtra::grid.arrange(vals$feat_gg, vals$samp_gg, nrow=1)
-      )
-      grDevices::dev.off()
+      ggsave(file,
+             plot = {vals$feat_gg + vals$samp_gg},
+             width=input$download_width,
+             height=input$download_height,
+             units = 'in')
     })
 
   ##### Kmeans #####
@@ -661,13 +659,11 @@ app_server <- function(input, output, session) {
   output$umap_download = downloadHandler(
     filename = 'UMAP_plots.png',
     content = function(file) {
-      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
-      print(
-        gridExtra::grid.arrange(
-          gridExtra::arrangeGrob(vals$umap_samps, vals$umap_kmeans, nrow=1),
-          vals$umap_clusters, nrow=2)
-      )
-      grDevices::dev.off()
+      ggsave(file,
+             plot = {(vals$umap_samps + vals$umap_kmeans) / vals$pca_clusters},
+             width = input$download_width,
+             height = input$download_height,
+             units = "in")
     })
 
   output$umap_coord_download = downloadHandler(
@@ -700,13 +696,11 @@ app_server <- function(input, output, session) {
   output$tsne_download = downloadHandler(
     filename = 'TSNE_plots.png',
     content = function(file) {
-      grDevices::png(file, width=input$download_width, height=input$download_height, units="in", res=200)
-      print(
-        gridExtra::grid.arrange(
-          gridExtra::arrangeGrob(vals$tsne_samps, vals$tsne_kmeans, nrow=1),
-          vals$tsne_clusters, nrow=2)
-      )
-      grDevices::dev.off()
+      ggsave(file,
+             plot = {(vals$tsne_samps + vals$tsne_kmeans) / vals$pca_clusters},
+             width = input$download_width,
+             height = input$download_height,
+             units = "in")
     })
 
   output$tsne_coord_download = downloadHandler(
@@ -766,9 +760,10 @@ app_server <- function(input, output, session) {
   output$heat_download = downloadHandler(
     filename = 'marker_heatmap.pdf',
     content = function(file) {
-      grDevices::pdf(file, width=input$download_width, height=input$download_height)
-      print(gridExtra::grid.arrange(vals$marker_heat))
-      grDevices::dev.off()
+      ggsave(file,
+             plot = vals$marker_heat,
+             width = input$download_width,
+             height = input$download_height,
+             units = "in")
     })
-
 }
