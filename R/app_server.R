@@ -629,7 +629,7 @@ app_server <- function(input, output, session) {
                      meta           = meta_mat(),
                      grp            = input$meta_val) %>%
 
-        rename(PC1 = X1, PC2 = X2) %>%
+        rename(PC1 = .data$X1, PC2 = .data$X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })
@@ -674,7 +674,7 @@ app_server <- function(input, output, session) {
                      meta           = meta_mat(),
                      grp            = input$meta_val) %>%
 
-        rename(UMAP_1 = X1, UMAP_2 = X2) %>%
+        rename(UMAP_1 = .data$X1, UMAP_2 = .data$X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })
@@ -711,7 +711,7 @@ app_server <- function(input, output, session) {
                      meta           = meta_mat(),
                      grp            = input$meta_val) %>%
 
-        rename(tSNE_1 = X1, tSNE_2 = X2) %>%
+        rename(tSNE_1 = .data$X1, tSNE_2 = .data$X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })

@@ -10,7 +10,7 @@
 #' @param grp Character value identifying the column of `meta` to use for group identifier
 #' @param ... Other objects passed to methods of `extract_values`
 #'
-#' @value A tibble with values for SampleID, Group, Cluster, PC/vector 1, and PC/vector 2
+#' @return A tibble with values for SampleID, Group, Cluster, PC/vector 1, and PC/vector 2
 #' @export
 #' @import dplyr
 #' @importFrom rlang .data
@@ -34,6 +34,11 @@ extract_values.prcomp <- function(clustered_data, ids, meta, grp, ...)
 #' @export
 extract_values.matrix <- function(clustered_data, ids, meta, grp, ...)
 {
+  # fix "no visible global function definition" warnings in devtools::check()
+  # (can't use `.data$` inside of dplyr::select)
+  SampleID <- Group <- X1 <- X2 <- NULL
+
+  # create data.frame to return
   retval <- tibble(SampleID = ids,
                    X1       = clustered_data[,1],
                    X2       = clustered_data[,2])
@@ -70,10 +75,15 @@ extract_values.matrix <- function(clustered_data, ids, meta, grp, ...)
 #' @param ids Character vector of ids for each row in `clustered_data$x`, corresponding to labels in `grps`
 #' @param meta Data frame containing translation from id to group
 #' @param grp Character value identifying the column of `meta` to use for group identifier
-#' @value a data frame with values for SampleID, and Group, PC1, and PC2
+#' @return a data frame with values for SampleID, Group, PC1, and PC2
 #' @export
+#' @import dplyr
 extract_sb_values <- function(clustered_data, ids, meta, grp)
 {
+  # fix "no visible global function definition" warnings in devtools::check()
+  # (can't use `.data$` inside of dplyr::select)
+  SampleID <- Group <- PC1 <- PC2 <- NULL
+
   # pull principal components from sb_pca()
   tibble(SampleID = ids,
          PC1      = clustered_data$x[,'PC1'],
@@ -93,8 +103,9 @@ extract_sb_values <- function(clustered_data, ids, meta, grp)
 #' Extract loadings from sample based PCA
 #'
 #' @param clustered_data Object containing clustered data (expects output from `prcomp`)
-#' @value a data frame with loadings for PC1 and PC2 for each Cluster
+#' @return a data frame with loadings for PC1 and PC2 for each Cluster
 #' @export
+#' @import dplyr
 extract_sb_loadings <- function(clustered_data)
 {
   # pull loadings from clustered_data

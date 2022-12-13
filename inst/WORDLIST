@@ -5,6 +5,7 @@ NIAID
 RData
 RStudio
 Rtsne
+SampleID
 UMAP
 clusterJF
 cytometry
@@ -12,13 +13,19 @@ devtools
 flowdata
 ggplot
 github
+grps
 https
 interpretable
 io
 kmeans
+loadings
 niaid
 prcomp
+sb
 scRNA
+tSNE
 testData
+tibble
+tsne
 uamp
 umap
