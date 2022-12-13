@@ -53,5 +53,12 @@ setup_testing_data <- function()
                     paste0(testdat, '/2022_11_08/Metadata.csv'),
                     paste0(datadir, '/issue4.RData'),
                     compress = 'xz')
+
+    # Issue 9: https://github.com/niaid/JoesFlow/issues/9
+    if(!file.exists(paste0(datadir, '/issue9.RData')))
+      save_flowdata(paste0(testdat, '/2022_11_26/71_files_concat-210749940594039_36.csv'),
+                    paste0(testdat, '/2022_11_26/Metadata.csv'),
+                    paste0(datadir, '/issue9.RData'),
+                    compress = 'xz')
   }
 }
