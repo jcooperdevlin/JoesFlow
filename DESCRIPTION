@@ -1,6 +1,6 @@
 Package: JoesFlow
 Title: Joes Flow simplified analysis for single cell modality data
-Version: 0.1.2-1
+Version: 0.1.2-2
 Authors@R: c(person('Cooper', 'Devlin', email = 'jcooperdevlin@gmail.com', 
                     role = c('cre', 'aut')),
              person('Randy', 'Johnson', email = 'johnsonra@mail.nih.gov',
@@ -27,8 +27,8 @@ Imports:
     uwot,
     shinythemes
 Encoding: UTF-8
-URL: https://github.com/jcooperdevlin/JoesFlow
-BugReports: https://github.com/jcooperdevlin/JoesFlow/issues
+URL: https://github.com/NIAID/JoesFlow
+BugReports: https://github.com/NIAID/JoesFlow/issues
 Suggests: 
     rmarkdown,
     knitr,

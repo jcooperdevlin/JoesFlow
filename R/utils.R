@@ -31,9 +31,7 @@ clusterJF.prcomp <- function(clustered_data, ids, meta, grp, colors, legend.name
   PoV <- with(clustered_data, sdev^2 / sum(sdev^2))
 
   # format data for figure
-  tibble(X1       = clustered_data$x[,'PC1'],
-         X2       = clustered_data$x[,'PC2'],
-         SampleID = ids %>% unlist()) %>%
+  extract_values(clustered_data, ids, meta, grp) %>%
 
     clusterJF(meta = meta, grp = grp, colors = colors, legend.name = legend.name,
               xlab = paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)"),
@@ -48,9 +46,7 @@ clusterJF.prcomp <- function(clustered_data, ids, meta, grp, colors, legend.name
 clusterJF.matrix <- function(clustered_data, axis_prefix = 'axis', ids, meta, grp, colors, legend.name = 'Group', ...){
 
   # format data for figure
-  tibble(X1       = clustered_data[,1],
-         X2       = clustered_data[,2],
-         SampleID = ids %>% unlist()) %>%
+  extract_values(clustered_data, ids, meta, grp) %>%
 
     clusterJF(meta = meta, grp = grp, colors = colors, legend.name = legend.name,
               xlab = paste(axis_prefix, 1, sep = '_'),
@@ -63,26 +59,6 @@ clusterJF.matrix <- function(clustered_data, axis_prefix = 'axis', ids, meta, gr
 #' @method clusterJF tbl
 #' @export
 clusterJF.tbl <- function(clustered_data, meta, grp, colors, xlab, ylab, legend.name, ...){
-
-  # grouping labels
-  meta_grps <- tibble(id = meta[,1] %>% unlist(),
-                      grp = meta[,grp] %>% unlist())
-
-  # get group labels
-  if(nrow(meta_grps) == nrow(clustered_data))  # Sometimes we get a list of groups for each row of clustered_data
-  {
-    # double check that these are sorted properly
-    if( any(meta_grps$id != clustered_data$SampleID))
-      stop("Group and sample IDs are not sorted properly")
-
-    clustered_data$Group <- meta_grps$grp
-  }else{                                       # other times we get a look up table with one row per sample ID
-    clustered_data <- clustered_data %>%
-      group_by(.data$SampleID) %>%
-      mutate(Group = meta_grps$grp[meta_grps$id == unique(.data$SampleID)] %>%
-               as.character()) %>%
-      ungroup()
-  }
 
   # render figure
   ggplot(clustered_data, aes(.data$X1, .data$X2, color=.data$Group)) +
@@ -114,20 +90,8 @@ clusterJF.tbl <- function(clustered_data, meta, grp, colors, xlab, ylab, legend.
 #' @importFrom rlang .data
 sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legend.name = 'Group') {
 
-  # grouping labels
-  meta_grps <- tibble(id = meta[,1] %>% unlist(),
-                      grp = meta[,grp] %>% unlist())
-
-  # format data for figure
-  plotter <- tibble(PC1      = clustered_data$x[,'PC1'],
-                    PC2      = clustered_data$x[,'PC2'],
-                    SampleID = ids) %>%
-
-    # get group labels
-    group_by(.data$SampleID) %>%
-    mutate(Group = meta_grps$grp[meta_grps$id == unique(.data$SampleID)] %>%
-             as.character()) %>%
-    ungroup()
+  # extract data for figure
+  plotter <- extract_sb_values(clustered_data, ids, meta, grp)
 
   # proportion of variance
   PoV <- with(clustered_data, sdev^2 / sum(sdev^2))
@@ -152,10 +116,11 @@ sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legen
   PoV <- with(clustered_data, sdev^2 / sum(sdev^2))
 
   # render figure
-  pp2 <- ggplot(plotter, aes(.data$PC1, .data$PC2, color=.data$Label, label=.data$Label)) +
+  pp2 <- extract_sb_loadings(clustered_data) %>%
+    ggplot(aes(.data$PC1, .data$PC2, color=.data$Cluster, label=.data$Cluster)) +
     geom_point() + theme_bw() +
     geom_label_repel(size = 6) +
-    scale_color_manual(values=colors2, name = 'Cluster') +
+    scale_color_manual(values=colors2) +
     guides(color = guide_legend(override.aes = list(label = 'O', size = 3))) +
     theme(axis.text=element_text(color='black', size=14),
           axis.title=element_text(color='black', size=16))
