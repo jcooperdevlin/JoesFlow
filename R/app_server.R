@@ -7,6 +7,7 @@
 #' @importFrom shiny downloadHandler
 #' @importFrom shiny observe
 #' @importFrom shiny fluidRow
+#' @importFrom shiny modalDialog
 #' @importFrom shiny plotOutput
 #' @importFrom shiny radioButtons
 #' @importFrom shiny reactive
@@ -14,6 +15,7 @@
 #' @importFrom shiny renderPlot
 #' @importFrom shiny renderUI
 #' @importFrom shiny selectInput
+#' @importFrom shiny showModal
 #' @importFrom shiny sliderInput
 #' @importFrom shiny tagList
 #' @importFrom shiny withProgress
@@ -55,7 +57,21 @@ app_server <- function(input, output, session) {
     inFile <- input$file1
 
     if(is.null(inFile))
-      return(NULL)
+    {
+      # if no data have been provided, check if the test data have been installed with the package
+      extdata <- system.file("extdata", package = 'JoesFlow')
+
+      # if test data are available and we are on the Visualize tab, use test data
+      if(input$nav_bar == "Visualize" & extdata != '')
+      {
+        # warning message will be generated when accessing the meta data - no need to notify them twice
+
+        # use test data
+        inFile <- list(datapath = paste0(extdata, '/flow_test.csv'))
+      }else{
+        return(NULL)
+      }
+    }
 
     set.seed(input$seed)
 
@@ -71,8 +87,23 @@ app_server <- function(input, output, session) {
   meta_mat <- reactive({
     inFile <- input$file2
 
-    if (is.null(inFile))
-      return(NULL)
+    if(is.null(inFile))
+    {
+      # if no data have been provided, check if the test data have been installed with the pacakge
+      extdata <- system.file("extdata", package = 'JoesFlow')
+
+      if(input$nav_bar == "Visualize" & extdata != '')
+      {
+        # warning message will be generated when accessing the meta data
+        modalDialog("No input data provided - using test data") %>%
+          showModal()
+
+        # use test data
+        inFile <- list(datapath = paste0(extdata, '/metadata.csv'))
+      }else{
+        return(NULL)
+      }
+    }
 
     # check file encoding for odd characters (don't do this for flow files, as they tend to be very big and pretty much all numeric)
     enc <- stringi::stri_read_raw(inFile$datapath) %>%

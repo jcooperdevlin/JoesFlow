@@ -27,6 +27,7 @@ app_ui <- function() {
   tagList(
     # Your application UI logic
     navbarPage(title = "Joe's Flow",
+               id = "nav_bar",
                tabPanel("Upload",
                         sidebarPanel(
                           fileInput("file1", "Choose Flow File",
