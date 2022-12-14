@@ -64,6 +64,11 @@ app_ui <- function() {
                                       choices=c("Kmeans", "Hierarchical"), selected="Kmeans"),
                           uiOutput("cluster_setting"),
                           uiOutput("col_pal"),
+                          uiOutput("show_dimreduct_legend"),
+                          radioButtons("show_hide_cluster_legend",
+                                       "Cluster Legend",
+                                       choices = c('Show', 'Hide'),
+                                       select = 'Show'),
 
                           fluidRow(downloadButton('pca_coord_download', label = "PCA coords")),
                           fluidRow(downloadButton('umap_coord_download', label = "UMAP coords")),
@@ -77,7 +82,8 @@ app_ui <- function() {
 
                         ),
                         mainPanel(
-                          tabsetPanel(type = "tabs",
+                          tabsetPanel(id = 'main_output',
+                                      type = "tabs",
                                       tabPanel("Features",
                                                fluidRow(column(6,
                                                                plotOutput("feats_plot")),

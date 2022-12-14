@@ -10,6 +10,7 @@
 #' @param ylab y-axis label
 #' @param axis_prefix x-and y-axis prefix (e.g. 'UMAP_')
 #' @param legend.name Character string for the legend name (default is 'Group')
+#' @param show_legend Logical value used to turn off the legend
 #' @param ... Other objects passed along to functions within clusterJF
 #'
 #' @return A ggplot object
@@ -25,7 +26,7 @@ clusterJF <- function(clustered_data, ...) {
 #' @rdname clusterJF
 #' @method clusterJF prcomp
 #' @export
-clusterJF.prcomp <- function(clustered_data, ids, meta, grp, colors, legend.name = 'Group', ...) {
+clusterJF.prcomp <- function(clustered_data, ids, meta, grp, colors, legend.name = 'Group', show.legend = TRUE, ...) {
 
   # proportion of variance
   PoV <- with(clustered_data, sdev^2 / sum(sdev^2))
@@ -36,14 +37,14 @@ clusterJF.prcomp <- function(clustered_data, ids, meta, grp, colors, legend.name
     clusterJF(meta = meta, grp = grp, colors = colors, legend.name = legend.name,
               xlab = paste0("PC1 (Explained Variance ", round(PoV[1],4)*100, "%)"),
               ylab = paste0("PC2 (Explained Variance ", round(PoV[2],4)*100, "%)"),
-              ...)
+              show.legend, ...)
 }
 
 # method for matrix (probably coming from `umap`)
 #' @rdname clusterJF
 #' @method clusterJF matrix
 #' @export
-clusterJF.matrix <- function(clustered_data, axis_prefix = 'axis', ids, meta, grp, colors, legend.name = 'Group', ...){
+clusterJF.matrix <- function(clustered_data, axis_prefix = 'axis', ids, meta, grp, colors, legend.name = 'Group', show.legend = TRUE, ...){
 
   # format data for figure
   extract_values(clustered_data, ids, meta, grp) %>%
@@ -51,23 +52,28 @@ clusterJF.matrix <- function(clustered_data, axis_prefix = 'axis', ids, meta, gr
     clusterJF(meta = meta, grp = grp, colors = colors, legend.name = legend.name,
               xlab = paste(axis_prefix, 1, sep = '_'),
               ylab = paste(axis_prefix, 2, sep = '_'),
-              ...)
+              show.legend, ...)
 }
 
 # method for tibble object (should normally be called from clusterJF.prcomp or clusterJF.matrix)
 #' @rdname clusterJF
 #' @method clusterJF tbl
 #' @export
-clusterJF.tbl <- function(clustered_data, meta, grp, colors, xlab, ylab, legend.name, ...){
+clusterJF.tbl <- function(clustered_data, meta, grp, colors, xlab, ylab, legend.name, show.legend = TRUE, ...){
 
   # render figure
-  ggplot(clustered_data, aes(.data$X1, .data$X2, color=.data$Group)) +
+  retval <- ggplot(clustered_data, aes(.data$X1, .data$X2, color=.data$Group)) +
     geom_point() + theme_bw() +
     scale_color_manual(values=colors, name = legend.name) +
     xlab(xlab) +
     ylab(ylab) +
     theme(axis.text=element_text(color='black', size=14),
           axis.title=element_text(color='black', size=16))
+
+  if(!show.legend)
+    retval <- retval + guides(color = FALSE)
+
+  retval
 }
 
 
@@ -81,6 +87,8 @@ clusterJF.tbl <- function(clustered_data, meta, grp, colors, xlab, ylab, legend.
 #' @param colors1 Vector of colors for samples
 #' @param colors2 Vector of colors for clusters
 #' @param legend.name Character string for the legend name (default is 'Group')
+#' @param show_grp_legend Logical value used to turn off the legend for groups
+#' @param show_clust_legend Logical value used to turn off the legend for clusters
 #'
 #' @return A ggplot object
 #' @export
@@ -88,7 +96,7 @@ clusterJF.tbl <- function(clustered_data, meta, grp, colors, xlab, ylab, legend.
 #' @import ggplot2
 #' @importFrom ggrepel geom_label_repel
 #' @importFrom rlang .data
-sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legend.name = 'Group') {
+sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legend.name = 'Group', show_grp_legend = TRUE, show_clust_legend = TRUE) {
 
   # extract data for figure
   plotter <- extract_sb_values(clustered_data, ids, meta, grp)
@@ -107,6 +115,9 @@ sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legen
     theme(axis.text=element_text(color='black', size=14),
           axis.title=element_text(color='black', size=16))
 
+  if(!show_grp_legend)
+    pp1 <- pp1 + guides(color = FALSE)
+
   # format data for figure
   plotter <- tibble(PC1   = clustered_data$rotation[,'PC1'],
                     PC2   = clustered_data$rotation[,'PC2'],
@@ -124,6 +135,9 @@ sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legen
     guides(color = guide_legend(override.aes = list(label = 'O', size = 3))) +
     theme(axis.text=element_text(color='black', size=14),
           axis.title=element_text(color='black', size=16))
+
+  if(!show_clust_legend)
+    pp2 <- pp2 + guides(color = FALSE)
 
   pp1 + pp2
 }
