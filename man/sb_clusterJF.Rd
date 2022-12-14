@@ -11,7 +11,9 @@ sb_clusterJF(
   grp,
   colors1,
   colors2,
-  legend.name = "Group"
+  legend.name = "Group",
+  show_grp_legend = TRUE,
+  show_clust_legend = TRUE
 )
 }
 \arguments{
@@ -28,6 +30,10 @@ sb_clusterJF(
 \item{colors2}{Vector of colors for clusters}
 
 \item{legend.name}{Character string for the legend name (default is 'Group')}
+
+\item{show_grp_legend}{Logical value used to turn off the legend for groups}
+
+\item{show_clust_legend}{Logical value used to turn off the legend for clusters}
 }
 \value{
 A ggplot object

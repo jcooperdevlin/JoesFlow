@@ -8,6 +8,7 @@
 #' @importFrom shiny observe
 #' @importFrom shiny fluidRow
 #' @importFrom shiny plotOutput
+#' @importFrom shiny radioButtons
 #' @importFrom shiny reactive
 #' @importFrom shiny reactiveValues
 #' @importFrom shiny renderPlot
@@ -16,6 +17,7 @@
 #' @importFrom shiny sliderInput
 #' @importFrom shiny tagList
 #' @importFrom shiny withProgress
+#' @importFrom shiny isTruthy
 #'
 #' @import dplyr
 #' @importFrom reshape2 dcast
@@ -52,7 +54,7 @@ app_server <- function(input, output, session) {
   data_mat <- reactive({
     inFile <- input$file1
 
-    if (is.null(inFile))
+    if(is.null(inFile))
       return(NULL)
 
     set.seed(input$seed)
@@ -141,6 +143,24 @@ app_server <- function(input, output, session) {
                 "Number of clusters:",
                 value = 5,
                 min = 2)
+  })
+
+  # Visualize::show dimensionality reduction legend
+  dimreduct_legend_select <- reactive({
+    if(isTruthy(input$show_hide_dimreduct_legend))
+      return(input$show_hide_dimreduct_legend)
+
+    return('Show')
+  })
+
+  output$show_dimreduct_legend <- renderUI({
+    radioButtons("show_hide_dimreduct_legend",
+                 case_when(input$main_output == 'PCA' ~ "PCA Legend",
+                           input$main_output == 'UMAP' ~ "UMAP Legend",
+                           input$main_output == 'TSNE' ~ "TSNE Legend",
+                           TRUE ~ "Dimensionality Reduction Legend"),
+                 choices = c('Show', 'Hide'),
+                 selected = dimreduct_legend_select())
   })
 
 
@@ -273,7 +293,8 @@ app_server <- function(input, output, session) {
                 meta = meta_mat(),
                 grp = input$meta_val,
                 colors = colors_samples(),
-                legend.name = input$meta_val)
+                legend.name = input$meta_val,
+                show.legend = input$show_hide_dimreduct_legend == 'Show')
 
     vals$pca_samps<-gg
 
@@ -289,7 +310,8 @@ app_server <- function(input, output, session) {
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),
-                legend.name = 'Cluster')
+                legend.name = 'Cluster',
+                show.legend = input$show_hide_cluster_legend == 'Show')
 
     vals$pca_kmeans<-gg
 
@@ -319,7 +341,9 @@ app_server <- function(input, output, session) {
                  grp = input$meta_val,
                  colors1 = colors_samples(),
                  colors2 = colors_clusters(),
-                 legend.name = input$meta_val)
+                 legend.name = input$meta_val,
+                 show_grp_legend = input$show_hide_dimreduct_legend == 'Show',
+                 show_clust_legend = input$show_hide_cluster_legend == 'Show')
 
   })
   output$samp_p_pca <- renderPlot({
@@ -356,7 +380,8 @@ app_server <- function(input, output, session) {
                 meta = meta_mat(),
                 grp = input$meta_val,
                 colors = colors_samples(),
-                legend.name = input$meta_val)
+                legend.name = input$meta_val,
+                show.legend = input$show_hide_dimreduct_legend == 'Show')
 
     vals$umap_samps<-gg
 
@@ -372,7 +397,8 @@ app_server <- function(input, output, session) {
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),
-                legend.name = 'Cluster')
+                legend.name = 'Cluster',
+                show.legend = input$show_hide_cluster_legend == 'Show')
 
     vals$umap_kmeans<-gg
 
@@ -405,7 +431,8 @@ app_server <- function(input, output, session) {
                 meta = meta_mat(),
                 grp = input$meta_val,
                 colors = colors_samples(),
-                legend.name = input$meta_val)
+                legend.name = input$meta_val,
+                show.legend = input$show_hide_dimreduct_legend == 'Show')
 
     vals$tsne_samps<-gg
 
@@ -421,7 +448,8 @@ app_server <- function(input, output, session) {
                 meta = kmeaner(),
                 grp = 'grp',
                 colors = colors_clusters(),
-                legend.name = 'Cluster')
+                legend.name = 'Cluster',
+                show.legend = input$show_hide_cluster_legend == 'Show')
 
     vals$tsne_kmeans<-gg
 
