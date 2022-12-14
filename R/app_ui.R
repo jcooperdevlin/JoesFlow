@@ -13,6 +13,7 @@
 #' @importFrom shiny navbarPage
 #' @importFrom shiny numericInput
 #' @importFrom shiny plotOutput
+#' @importFrom shiny radioButtons
 #' @importFrom shiny selectInput
 #' @importFrom shiny selectizeInput
 #' @importFrom shiny sidebarPanel
@@ -68,7 +69,7 @@ app_ui <- function() {
                           radioButtons("show_hide_cluster_legend",
                                        "Cluster Legend",
                                        choices = c('Show', 'Hide'),
-                                       select = 'Show'),
+                                       selected = 'Show'),
 
                           fluidRow(downloadButton('pca_coord_download', label = "PCA coords")),
                           fluidRow(downloadButton('umap_coord_download', label = "UMAP coords")),

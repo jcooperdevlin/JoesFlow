@@ -10,7 +10,7 @@
 #' @param ylab y-axis label
 #' @param axis_prefix x-and y-axis prefix (e.g. 'UMAP_')
 #' @param legend.name Character string for the legend name (default is 'Group')
-#' @param show_legend Logical value used to turn off the legend
+#' @param show.legend Logical value used to turn off the legend
 #' @param ... Other objects passed along to functions within clusterJF
 #'
 #' @return A ggplot object

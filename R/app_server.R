@@ -8,6 +8,7 @@
 #' @importFrom shiny observe
 #' @importFrom shiny fluidRow
 #' @importFrom shiny plotOutput
+#' @importFrom shiny radioButtons
 #' @importFrom shiny reactive
 #' @importFrom shiny reactiveValues
 #' @importFrom shiny renderPlot
@@ -16,6 +17,7 @@
 #' @importFrom shiny sliderInput
 #' @importFrom shiny tagList
 #' @importFrom shiny withProgress
+#' @importFrom shiny isTruthy
 #'
 #' @import dplyr
 #' @importFrom reshape2 dcast
@@ -158,7 +160,7 @@ app_server <- function(input, output, session) {
                            input$main_output == 'TSNE' ~ "TSNE Legend",
                            TRUE ~ "Dimensionality Reduction Legend"),
                  choices = c('Show', 'Hide'),
-                 select = dimreduct_legend_select())
+                 selected = dimreduct_legend_select())
   })
 
 
