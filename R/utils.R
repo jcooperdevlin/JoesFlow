@@ -147,7 +147,7 @@ sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legen
 #'
 #' @param sample_data Data frame or numeric matrix containing sample data
 #' @param ids Character vector of ids for each row in `sample_data`, corresponding to the labels in `meta`
-#' @param meta Data frame containing metadata - first column corresponds to ids (when ids are sorted using `order`)
+#' @param meta Data frame containing metadata - first column should contain one row for each value in ids
 #' @param grp Column of meta to use for grouping of data
 #' @param kmeans_groups Vector containing Kmeans group label for each row in `sample_data`
 #' @param colors Vector of colors for samples
@@ -161,9 +161,16 @@ sb_clusterJF <- function(clustered_data, ids, meta, grp, colors1, colors2, legen
 #' @importFrom rlang .data
 marker_heatJF <- function(sample_data, ids, meta, grp, kmeans_groups, colors, sample_size)
 {
+  # fix this particular text encoding that ComplexHeatmap doesn't like (surely there is a better way to handle this...)
+  meta[[grp]] <- gsub("Na\xefve", 'Naive', meta[[grp]], fixed = TRUE, useBytes = TRUE)
+
+  # create translation table to go from sample ID to group ID
+  grp_trans <- meta[[grp]]
+  names(grp_trans) <- meta[,1]
+
   # format data for figure
   plotter <- tibble(SampleID = factor(ids),             # want ids to run from 1:length(unique(ids))
-                    Group = meta[as.numeric(.data$SampleID)],
+                    Group = grp_trans[as.character(ids)],
                     Group_fact = factor(.data$Group),
                     Kmeans = kmeans_groups) %>%
 
@@ -175,14 +182,17 @@ marker_heatJF <- function(sample_data, ids, meta, grp, kmeans_groups, colors, sa
   # if we have enough colors, plot group color
   if(length(levels(plotter$Group_fact)) <= length(levels(plotter$SampleID)))
   {
-    names(colors)[1:length(unique(meta))] <- unique(meta)
+    names(colors)[1:length(unique(grp_trans))] <- unique(grp_trans)
     ha <- ComplexHeatmap::columnAnnotation(Group=plotter_sub$Group, col=list(Group=colors[plotter_sub$Group_fact]))
   }else{
     ha <- NULL
   }
 
+  # take care of warning about global variables
+  SampleID <- Group <- Group_fact <- Kmeans <- NULL
+
   # create heatmap
-  select(plotter_sub, -.data$SampleID, -.data$Group, -.data$Group_fact, -.data$Kmeans) %>%
+  select(plotter_sub, -SampleID, -Group, -Group_fact, -Kmeans) %>%
     t() %>%
     scale() %>%
     ComplexHeatmap::Heatmap(show_row_names = T, show_column_names = F,

@@ -653,8 +653,9 @@ app_server <- function(input, output, session) {
       set.seed(input$seed)
       h1 <- marker_heatJF(  sample_data = data_mat()[,-1],
                                     ids = data_mat()[,1],
-                                   meta = meta_mat()[,input$meta_val],
-                          kmeans_groups = kmeaner(),
+                                   meta = meta_mat(),
+                                    grp = input$meta_val,
+                          kmeans_groups = kmeaner()$grp,
                                  colors = colors_samples(),
                             sample_size = 500)
 

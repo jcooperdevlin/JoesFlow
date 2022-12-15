@@ -11,7 +11,7 @@ marker_heatJF(sample_data, ids, meta, grp, kmeans_groups, colors, sample_size)
 
 \item{ids}{Character vector of ids for each row in `sample_data`, corresponding to the labels in `meta`}
 
-\item{meta}{Data frame containing metadata - first column corresponds to ids (when ids are sorted using `order`)}
+\item{meta}{Data frame containing metadata - first column should contain one row for each value in ids}
 
 \item{grp}{Column of meta to use for grouping of data}
 
