@@ -255,13 +255,19 @@ compositionJF <- function(meta, grp, kmeans_groups, colors)
     dplyr::select(-"N", -"n")
 
 
-  g1 <- ggplot(plotter, aes(.data$SampleID, .data$pct, fill=.data$cluster)) +
+  g1 <- mutate(plotter, # convert to character so we don't end up with gaps in the figure (see https://github.com/niaid/JoesFlow/issues/13)
+               SampleID = as.character(.data$SampleID)) %>%
+
+    ggplot(aes(.data$SampleID, .data$pct, fill=.data$cluster)) +
     geom_col()+ scale_fill_manual(values=colors) + theme_bw() +
     guides(fill = guide_legend("Cluster")) +
     ylab("Cluster Percentage %") +
     xlab("Sample IDs") +
-    theme(axis.title=element_text(size=16)) +
-    facet_wrap(~.data$Group, ncol=4, scales="free_x")
+    theme(axis.title=element_text(size=16))
+
+  # no need to facet_wrap if the grouping variable is the sample ID
+  if(!all(plotter$SampleID == plotter$Group))
+    g1 <- g1 + facet_wrap(~.data$Group, ncol=4, scales="free_x")
 
   # return plotter and g1
   list(plotter = plotter,

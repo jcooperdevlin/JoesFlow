@@ -810,9 +810,7 @@ app_server <- function(input, output, session) {
   output$comp_download_table = downloadHandler(
     filename = 'Composition_table.txt',
     content = function(file) {
-      plotter=plotter_melt()
-      plotter_melt=reshape2::melt(data=plotter, id.vars=c("SampleID", "Group"))
-      utils::write.table(plotter_melt, file=file, row.names=F, sep='\t', quote=F)
+      utils::write.table(plotter_melt(), file=file, row.names=F, sep='\t', quote=F)
     })
 
   ## Markers ##
