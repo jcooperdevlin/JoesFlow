@@ -11,7 +11,9 @@ RUN apt-get update && apt-get install -y \
   libxml2-dev \
   libfontconfig1-dev \
   libcairo2-dev \
-  libmagick++-dev
+  libmagick++-dev \
+  libharfbuzz-dev \
+  libfribidi-dev
 
 # install R packge dependencies
 RUN R -e 'install.packages(\
@@ -20,8 +22,8 @@ RUN R -e 'install.packages(\
     "magick",\
     "RSpectra",\
     "shinythemes"),\
-  repos="https://packagemanager.rstudio.com/all/2022-07-14+Y3JhbiwyOjQ1MjYyMTU7QzczRDEwMEE")'
-  
+  repos="https://packagemanager.rstudio.com/all/2022-11-08+Y3JhbiwyOjQ1MjYyMTU7NDcyMTMxRQ")'
+
 RUN R -e 'BiocManager::install("ComplexHeatmap", update=FALSE)'
 
 # shouldn't *need* these, but it helps to cache the installs, rather than need to install them every time we use `devtools::install` below
@@ -38,15 +40,17 @@ RUN R -e 'install.packages(\
     "RColorBrewer",\
     "reshape2",\
     "Rtsne",\
+    "stringi",\
     "tidyr",\
     "uwot"),\
-  repos="https://packagemanager.rstudio.com/all/2022-07-14+Y3JhbiwyOjQ1MjYyMTU7QzczRDEwMEE")'
+  repos="https://packagemanager.rstudio.com/all/2022-11-08+Y3JhbiwyOjQ1MjYyMTU7NDcyMTMxRQ")'
 
 # copy R package to image
-RUN mkdir JoesFlow JoesFlow/man JoesFlow/R
+RUN mkdir JoesFlow JoesFlow/man JoesFlow/R JoesFlow/inst
 COPY DESCRIPTION LICENSE NAMESPACE JoesFlow/.
 COPY R/* JoesFlow/R/.
 COPY man/* JoesFlow/man/.
+COPY inst/extdata/* JoesFlow/inst/.
 
 # install JoesFlow
 RUN mkdir /srv/shiny-server/JoesFlow

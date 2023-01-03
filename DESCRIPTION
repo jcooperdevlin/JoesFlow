@@ -1,13 +1,13 @@
 Package: JoesFlow
 Title: Joes Flow simplified analysis for single cell modality data
-Version: 0.1.1-1
+Version: 0.1.2-3
 Authors@R: c(person('Cooper', 'Devlin', email = 'jcooperdevlin@gmail.com', 
                     role = c('cre', 'aut')),
              person('Randy', 'Johnson', email = 'johnsonra@mail.nih.gov',
                     role = 'aut'))
 Description: Joes Flow simplified analysis for single cell modality data.
 License: MIT + file LICENSE
-Depends: stats, utils, dplyr, ggplot2, patchwork, hexbin
+Depends: R (>= 3.5), stats, utils, dplyr, ggplot2, patchwork, hexbin
 Imports: 
     circlize,
     ComplexHeatmap,
@@ -22,18 +22,20 @@ Imports:
     rlang,
     Rtsne,
     shiny (>= 1.5.0),
+    stringi,
     tidyr,
     uwot,
     shinythemes
 Encoding: UTF-8
-URL: https://github.com/jcooperdevlin/JoesFlow
-BugReports: https://github.com/jcooperdevlin/JoesFlow/issues
+URL: https://github.com/NIAID/JoesFlow
+BugReports: https://github.com/NIAID/JoesFlow/issues
 Suggests: 
     rmarkdown,
     knitr,
     spelling,
     magick,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    stringr
 Config/testthat/edition: 3
 Language: en-US
 VignetteBuilder: knitr

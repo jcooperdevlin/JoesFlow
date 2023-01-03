@@ -4,10 +4,12 @@
 \alias{compositionJF}
 \title{Composition plot for Joes Flow}
 \usage{
-compositionJF(meta, kmeans_groups, colors)
+compositionJF(meta, grp, kmeans_groups, colors)
 }
 \arguments{
-\item{meta}{Named character vector containing metadata labels. Names of each element of the vector should correspond to sample IDs and include all IDs in `kmeans_groups`.}
+\item{meta}{Data frame containing metadata labels. Names of each element of the vector should correspond to sample IDs and include all IDs in `kmeans_groups`.}
+
+\item{grp}{Column of meta to use for grouping of data}
 
 \item{kmeans_groups}{Named character vector containing Kmeans group label for each sample. Names of each element of the vector should correspond to sample IDs and include all IDs in `meta`.}
 

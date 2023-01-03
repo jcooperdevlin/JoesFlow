@@ -8,9 +8,12 @@ sb_clusterJF(
   clustered_data,
   ids,
   meta,
+  grp,
   colors1,
   colors2,
-  legend.name = "Group"
+  legend.name = "Group",
+  show_grp_legend = TRUE,
+  show_clust_legend = TRUE
 )
 }
 \arguments{
@@ -18,13 +21,19 @@ sb_clusterJF(
 
 \item{ids}{Character vector of ids for each row in `clustered_data$x`, corresponding to labels in `meta`}
 
-\item{meta}{Character vector containing metadata labels, corresponding to ids}
+\item{meta}{Data frame containing metadata - first column corresponds to ids}
+
+\item{grp}{Column of meta to use for grouping of data}
 
 \item{colors1}{Vector of colors for samples}
 
 \item{colors2}{Vector of colors for clusters}
 
 \item{legend.name}{Character string for the legend name (default is 'Group')}
+
+\item{show_grp_legend}{Logical value used to turn off the legend for groups}
+
+\item{show_clust_legend}{Logical value used to turn off the legend for clusters}
 }
 \value{
 A ggplot object

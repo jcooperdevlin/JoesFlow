@@ -9,19 +9,40 @@
 \usage{
 clusterJF(clustered_data, ...)
 
-\method{clusterJF}{prcomp}(clustered_data, ids, meta, colors, legend.name = "Group", ...)
+\method{clusterJF}{prcomp}(
+  clustered_data,
+  ids,
+  meta,
+  grp,
+  colors,
+  legend.name = "Group",
+  show.legend = TRUE,
+  ...
+)
 
 \method{clusterJF}{matrix}(
   clustered_data,
   axis_prefix = "axis",
   ids,
   meta,
+  grp,
   colors,
   legend.name = "Group",
+  show.legend = TRUE,
   ...
 )
 
-\method{clusterJF}{tbl}(clustered_data, colors, xlab, ylab, legend.name, ...)
+\method{clusterJF}{tbl}(
+  clustered_data,
+  meta,
+  grp,
+  colors,
+  xlab,
+  ylab,
+  legend.name,
+  show.legend = TRUE,
+  ...
+)
 }
 \arguments{
 \item{clustered_data}{Object containing clustered data (expects output from `prcomp` or `uamp`)}
@@ -30,11 +51,15 @@ clusterJF(clustered_data, ...)
 
 \item{ids}{Character vector of ids for each row in `clustered_data$x`, corresponding to labels in `meta`}
 
-\item{meta}{Character vector containing metadata labels, corresponding to ids}
+\item{meta}{Data frame containing metadata - first column corresponds to ids}
+
+\item{grp}{Column of meta to use for grouping of data}
 
 \item{colors}{Vector of colors for each group}
 
 \item{legend.name}{Character string for the legend name (default is 'Group')}
+
+\item{show.legend}{Logical value used to turn off the legend}
 
 \item{axis_prefix}{x-and y-axis prefix (e.g. 'UMAP_')}
 

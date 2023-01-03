@@ -1,5 +1,5 @@
 #' The application User-Interface
-#' 
+#'
 #' @export
 #' @importFrom shiny br
 #' @importFrom shiny brushOpts
@@ -13,6 +13,7 @@
 #' @importFrom shiny navbarPage
 #' @importFrom shiny numericInput
 #' @importFrom shiny plotOutput
+#' @importFrom shiny radioButtons
 #' @importFrom shiny selectInput
 #' @importFrom shiny selectizeInput
 #' @importFrom shiny sidebarPanel
@@ -24,8 +25,9 @@
 #' @importFrom shiny uiOutput
 app_ui <- function() {
   tagList(
-    # Your application UI logic 
-    navbarPage(title = "Joe's Flow", 
+    # Your application UI logic
+    navbarPage(title = "Joe's Flow",
+               id = "nav_bar",
                tabPanel("Upload",
                         sidebarPanel(
                           fileInput("file1", "Choose Flow File",
@@ -39,8 +41,8 @@ app_ui <- function() {
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
                                       ".csv")
-                                    
-                                    
+
+
                           ),
                           sliderInput("subsample",
                                       "How much subsampling?",
@@ -49,12 +51,6 @@ app_ui <- function() {
                                       max = 1)
                         ),
                         mainPanel(
-                          #tags$head(tags$style(
-                          #  "#contents{color: #df691a; font-size: 18px}",
-                          #  "#DataTables_Table_0_filter{color: #df691a; font-size: 18px}",
-                          #  "#DataTables_Table_0_info{color: #df691a; font-size: 18px}",
-                          #  "#DataTables_Table_0_length{color: #df691a; font-size: 18px}",
-                          #  "#DataTables_Table_0_paginate{color: #df691a; font-size: 18px}")),
                           DT::DTOutput('contents'),
                           DT::DTOutput('metadata')
                         )
@@ -62,43 +58,40 @@ app_ui <- function() {
                tabPanel("Visualize",
                         sidebarPanel(
                           uiOutput("meta_sel"),
-                          
-                          #fluidRow(column(4,
-                          #                numericInput("mean_cutoff", label = "Mean Cutoff",
-                          #                             min=0,max=Inf, step = 1000, value = 0),
-                          #                numericInput("SD_cutoff", label = "SD Cutoff",
-                          #                             min=0,max=Inf, step = 50, value = 0),
-                          #                numericInput("var_cutoff", label = "Variance Cutoff",
-                          #                             min=0,max=Inf, step = 1000, value = 0)
-                          #                )),
-                          
-                          
+
                           br(),
-                          
+
                           # Input: Slider for the number of observations to generate ----
                           selectInput("clust_type", label = "Select Clustering Method",
                                       choices=c("Kmeans", "Hierarchical"), selected="Kmeans"),
                           uiOutput("cluster_setting"),
                           uiOutput("col_pal"),
-                          
+                          uiOutput("show_dimreduct_legend"),
+                          radioButtons("show_hide_cluster_legend",
+                                       "Cluster Legend",
+                                       choices = c('Show', 'Hide'),
+                                       selected = 'Show'),
+
                           fluidRow(downloadButton('pca_coord_download', label = "PCA coords")),
                           fluidRow(downloadButton('umap_coord_download', label = "UMAP coords")),
                           fluidRow(downloadButton('tsne_coord_download', label = "tSNE coords")),
-                          fluidRow(column(6, numericInput("download_height", "Download Height", 
+                          fluidRow(column(6, numericInput("download_height", "Download Height",
                                                           min=1, max=50, step=1, value=10)),
-                                   column(6, numericInput("download_width", "Download Width", 
-                                                          min=1, max=50, step=1, value=15)))
-                          
+                                   column(6, numericInput("download_width", "Download Width",
+                                                          min=1, max=50, step=1, value=15))),
+
+                          numericInput('seed', 'Random Seed:', value = 247893, min = 1)
+
                         ),
                         mainPanel(
-                          tabsetPanel(type = "tabs",
-                                      tabPanel("Features", 
+                          tabsetPanel(id = 'main_output',
+                                      type = "tabs",
+                                      tabPanel("Features",
                                                fluidRow(column(6,
                                                                plotOutput("feats_plot")),
-                                                        column(6, 
+                                                        column(6,
                                                                plotOutput("sample_var"))),
-                                               fluidRow(column(6, downloadButton('feat_download')))#,
-                                               #plotOutput("feats_distr")
+                                               fluidRow(column(6, downloadButton('feat_download')))
                                       ),
                                       tabPanel("PCA",
                                                fluidRow(column(6,
@@ -113,7 +106,7 @@ app_ui <- function() {
                                                         column(6, downloadButton("pca_download_loading", label='Download Loadings'))
                                                )
                                       ),
-                                      tabPanel("UMAP", 
+                                      tabPanel("UMAP",
                                                fluidRow(column(6,
                                                                plotOutput("umap_plot")),
                                                         column(6,
@@ -145,11 +138,7 @@ app_ui <- function() {
                                                  column(width = 12,
                                                         h4("Click & Drag for plot details"),
                                                         DT::dataTableOutput("click_info")
-                                                 )#,
-                                                 #column(width = 0,
-                                                 #        h4("Brushed points"),
-                                                 #        verbatimTextOutput("brush_info")
-                                                 # )
+                                                 )
                                                ),
                                                fluidRow(column(12,
                                                                plotOutput("composition_ui",
@@ -184,7 +173,7 @@ app_ui <- function() {
                                '.navbar-header {font-family: "Brush Script MT"}',
                                '.navbar-brand { font-size: 48px}',
                                '.navbar-nav > li > a, .navbar-brand {
-                              padding-top:30px !important; 
+                              padding-top:30px !important;
                             padding-bottom:0 !important;
                             height: 80px;
                            }',
