@@ -162,41 +162,48 @@ app_ui <- function() {
                           )
                         )
                ),
-               # Warning message for the `tabPanel` section:
-               # Navigation containers expect a collection of `bslib::nav()`/`shiny::tabPanel()`s and/or `bslib::nav_menu()`/`shiny::navbarMenu()`s. Consider using `header` or `footer` if you wish to place content above (or below) every panel's contents.
-               tabPanel(HTML(" </a></li><li><a href=\"https://www.niaid.nih.gov/research/png-loke-phd\">Type 2 Immunity Section, Laboratory of Parasitic Diseases, NIAID")),
-               #tags$script(HTML("var header = $('.navbar> .container-fluid');
-               #             header.append('<a <div style=\"float:right;color:#df691a\"><h3>https://www.niaid.nih.gov/research/png-loke-phd</h3><div></a>');
-               #                  console.log(header)")),
-               tags$style(HTML(".navbar-default .navbar-brand {color: #df691a; font-size:28}",
-                               ".navbar-default .navbar-brand:hover {color: #df691a;}",
-                               '.navbar-header {font-family: "Brush Script MT"}',
-                               '.navbar-brand { font-size: 48px}',
-                               '.navbar-nav > li > a, .navbar-brand {
-                              padding-top:30px !important;
-                            padding-bottom:0 !important;
-                            height: 80px;
-                           }',
-                               "
-                           .navbar-nav {
-                           float: none !important;
-                           }
-                           .navbar-nav > li:nth-child(4) {
-                           float: right;
-                           right: 150px;
-                           }.",
-                               'h3, .h3 { font-size: 12px}',
-                               '.navbar {min-height:80px !important;}',
-                               ".navbar { background-color: #2c3e4f;}",
-                               ".navbar-default .navbar-nav > li > a {color:#df691a;}",
-                               ".navbar-default .navbar-nav > .active > a,",
-                               ".navbar-default .navbar-nav > .active > a:focus,",
-                               ".navbar-default .navbar-nav > .active > a:hover {color: white;font-size:18px;background-color:#2c3e4f}",
-                               ".navbar-default .navbar-nav > li > a:hover {color: white;background-color:#2c3e4f;text-decoration:underline;}",
-                               ".navbar-default .navbar-nav > li > a[data-value='t1'] {color: red;background-color: pink;}",
-                               ".navbar-default .navbar-nav > li > a[data-value='t2'] {color: blue;background-color: lightblue;}",
-                               ".navbar-default .navbar-nav > li > a[data-value='t3'] {color: green;background-color: lightgreen;}"
-               ))
+               tabPanel(HTML(" </a></li><li><a href=\"https://www.niaid.nih.gov/research/png-loke-phd\">Type 2 Immunity Section,<br>Laboratory of Parasitic Diseases, NIAID")),
+               header = tags$head(
+                 tags$style(HTML(
+                    # changes to font of "Joe's Flow" in header
+                    ".navbar-default .navbar-brand {color: #df691a; font-size:28}", # changes color
+                    ".navbar-default .navbar-brand:hover {color: #df691a;}",        # changes color (on hover)
+                    '.navbar-header {font-family: "Brush Script MT"}',              # changes font
+                    '.navbar-brand { font-size: 48px}',                             # changes font size
+
+                    # adds padding around text in header
+                    '.navbar-nav > li > a, .navbar-brand {
+                      padding-top:30px !important;
+                      padding-bottom:0 !important;
+                      height: 80px;
+                    }',
+
+                    # makes lab link float to the right of the header
+                    '.navbar-nav {
+                      float: none !important;
+                    }
+                    .navbar-nav > li:nth-child(4) {
+                      float: right;
+                      right: 75px;
+                    }.',
+
+                    # background color and formatting of header block
+                    'h3, .h3 { font-size: 12px}',
+                    '.navbar {min-height:80px !important;}',
+                    '.navbar { background-color: #2c3e4f;}',
+
+                    # changes to font of tab titles
+                    '.navbar-default .navbar-nav > li > a {color:#df691a;}',
+                    '.navbar-default .navbar-nav > .active > a,',
+                    '.navbar-default .navbar-nav > .active > a:focus,',
+                    '.navbar-default .navbar-nav > .active > a:hover {color: white;font-size:18px;background-color:#2c3e4f}',
+                    '.navbar-default .navbar-nav > li > a:hover {color: white;background-color:#2c3e4f;text-decoration:underline;}',
+
+                    # ???
+                    ".navbar-default .navbar-nav > li > a[data-value='t1'] {color: red;background-color: pink;}",
+                    ".navbar-default .navbar-nav > li > a[data-value='t2'] {color: blue;background-color: lightblue;}",
+                    ".navbar-default .navbar-nav > li > a[data-value='t3'] {color: green;background-color: lightgreen;}"
+                 )))
     )
   )
 }
