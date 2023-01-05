@@ -52,6 +52,11 @@ app_server <- function(input, output, session) {
 
   ##### Options #####
 
+  test_data_paths <- reactiveValues(flow = paste0(system.file("extdata", package = 'JoesFlow'),
+                                                  '/flow.csv'),
+                                    meta = paste0(system.file("extdata", package = 'JoesFlow'),
+                                                  '/metadata.csv'))
+
   # Upload::choose flow file
   data_mat <- reactive({
     inFile <- input$file1
@@ -67,7 +72,7 @@ app_server <- function(input, output, session) {
         # warning message will be generated when accessing the meta data - no need to notify them twice
 
         # use test data
-        inFile <- list(datapath = paste0(extdata, '/flow_test.csv'))
+        inFile <- list(datapath = test_data_paths$flow)
       }else{
         return(NULL)
       }
@@ -99,7 +104,7 @@ app_server <- function(input, output, session) {
           showModal()
 
         # use test data
-        inFile <- list(datapath = paste0(extdata, '/metadata.csv'))
+        inFile <- list(datapath = test_data_paths$meta)
       }else{
         return(NULL)
       }
