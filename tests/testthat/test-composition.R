@@ -5,7 +5,7 @@
 #########
 
 library(JoesFlow)
-library(stringr)
+library(shiny)
 
 # check which data sets we can test
 extdata_dir  <- system.file( 'extdata', package = 'JoesFlow')

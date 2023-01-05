@@ -5,9 +5,6 @@
 #########
 
 library(JoesFlow)
-library(stringr)
-
-library(JoesFlow)
 library(shiny)
 
 # check which data sets we can test
