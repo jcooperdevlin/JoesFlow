@@ -1,4 +1,9 @@
 library(testthat)
-library(JoesFlow)
+
+test_dir(
+  "./testthat",
+  env = shiny::loadSupport(),
+  reporter = c("progress", "fail")
+)
 
 test_check("JoesFlow")
