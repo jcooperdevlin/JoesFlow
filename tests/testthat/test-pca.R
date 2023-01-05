@@ -24,7 +24,6 @@ if(testData_dir != '')
 }
 
 
-
 #########
 # Tests #
 #########
@@ -35,6 +34,7 @@ test_that('PCA tests', {
   {
     # set up inputs
     session$setInputs(nav_bar                    = "Visualize",
+                      main_output                = 'PCA',
                       file1                      = NULL,
                       file2                      = NULL,
                       subsample                  = 0.2,
@@ -42,7 +42,6 @@ test_that('PCA tests', {
                       meta_val                   = "ID",
                       clust_type                 = "Kmeans",
                       kmean                      = 5,
-                      main_output                = 'PCA',
                       feat_dim                   = "PCA",
                       colpal                     = "Default",
                       show_hide_dimreduct_legend = "Show",
