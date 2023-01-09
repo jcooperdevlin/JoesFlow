@@ -67,6 +67,10 @@ test_that('PCA tests', {
 
       # check sample-based pca
       expect_s3_class(samp_pca(), 'ggplot')
+
+      # check sample-based value download
+      expect_s3_class(sb_vals(), 'tbl')
+      expect_equal(names(sb_vals()), c("SampleID", "Group", "PC1", "PC2"))
     }
   })
 })
