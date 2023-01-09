@@ -705,7 +705,7 @@ app_server <- function(input, output, session) {
   output$pca_download_vals = downloadHandler(
     filename = 'sample_PCA_values.txt',
     content = function(file) {
-      utils::write.table(sb_vals, file=file, row.names=FALSE, quote=FALSE, sep='\t')
+      utils::write.table(sb_vals(), file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   output$pca_download_loading = downloadHandler(
@@ -742,7 +742,7 @@ app_server <- function(input, output, session) {
   output$umap_download_vals = downloadHandler(
     filename = 'sample_PCA_values.txt',
     content = function(file) {
-      utils::write.table(sb_vals, file=file, row.names=FALSE, quote=FALSE, sep='\t')
+      utils::write.table(sb_vals(), file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   output$umap_download_loading = downloadHandler(
@@ -779,7 +779,7 @@ app_server <- function(input, output, session) {
   output$tsne_download_vals = downloadHandler(
     filename = 'sample_PCA_values.txt',
     content = function(file) {
-      utils::write.table(sb_vals, file=file, row.names=FALSE, quote=FALSE, sep='\t')
+      utils::write.table(sb_vals(), file=file, row.names=FALSE, quote=FALSE, sep='\t')
     })
 
   output$tsne_download_loading = downloadHandler(
