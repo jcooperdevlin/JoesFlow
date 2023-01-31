@@ -1,0 +1,889 @@
+{
+  "input": {
+    "clust_type": "Kmeans",
+    "colpal": "Default",
+    "download_height": 10,
+    "download_width": 15,
+    "feat_dim": " ",
+    "file1": null,
+    "file2": null,
+    "k1": "Comp.V7.A",
+    "k2": "SSC.B.A",
+    "k3": "Comp.UV7.A",
+    "k4": "Comp.V12.A",
+    "k5": "Comp.V11.A",
+    "kmean": 5,
+    "main_output": "Composition",
+    "meta_val": "ID",
+    "nav_bar": "Visualize",
+    "seed": 247893,
+    "show_hide_cluster_legend": "Hide",
+    "show_hide_dimreduct_legend": "Hide",
+    "subsample": 0.2
+  },
+  "output": {
+    "click_info": {
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "jquery",
+          "version": "3.6.0",
+          "src": {
+            "href": "jquery-3.6.0"
+          },
+          "meta": null,
+          "script": "jquery-3.6.0.min.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        },
+        {
+          "name": "dt-core",
+          "version": "1.12.1",
+          "src": {
+            "href": "dt-core-1.12.1"
+          },
+          "meta": null,
+          "script": "js/jquery.dataTables.min.js",
+          "stylesheet": [
+            "css/jquery.dataTables.min.css",
+            "css/jquery.dataTables.extra.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "package": null,
+          "all_files": false
+        },
+        {
+          "name": "jszip",
+          "version": "1.12.1",
+          "src": {
+            "href": "jszip-1.12.1"
+          },
+          "meta": null,
+          "script": "jszip.min.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "package": null,
+          "all_files": false
+        },
+        {
+          "name": "dt-ext-buttons",
+          "version": "1.12.1",
+          "src": {
+            "href": "dt-ext-buttons-1.12.1"
+          },
+          "meta": null,
+          "script": [
+            "js/dataTables.buttons.min.js",
+            "js/buttons.html5.min.js",
+            "js/buttons.colVis.min.js",
+            "js/buttons.print.min.js"
+          ],
+          "stylesheet": "css/buttons.dataTables.min.css",
+          "head": null,
+          "attachment": null,
+          "package": null,
+          "all_files": false
+        },
+        {
+          "name": "crosstalk",
+          "version": "1.2.0",
+          "src": {
+            "href": "crosstalk-1.2.0"
+          },
+          "meta": null,
+          "script": "js/crosstalk.min.js",
+          "stylesheet": "css/crosstalk.min.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "cluster_setting": {
+      "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"kmean-label\" for=\"kmean\">Number of clusters:<\/label>\n  <input id=\"kmean\" type=\"number\" class=\"form-control\" value=\"5\" min=\"2\"/>\n<\/div>",
+      "deps": [
+
+      ]
+    },
+    "col_pal": {
+      "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"colpal-label\" for=\"colpal\">Select Color Palette<\/label>\n  <div>\n    <select id=\"colpal\"><option value=\"Default\" selected>Default<\/option>\n<option value=\"Dark2\">Dark2<\/option>\n<option value=\"Paired\">Paired<\/option>\n<option value=\"Set2\">Set2<\/option><\/select>\n    <script type=\"application/json\" data-for=\"colpal\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n  <\/div>\n<\/div>",
+      "deps": [
+        {
+          "name": "selectize",
+          "version": "0.12.4",
+          "src": {
+            "href": "selectize-0.12.4"
+          },
+          "meta": null,
+          "script": [
+            "js/selectize.min.js",
+            "accessibility/js/selectize-plugin-a11y.min.js"
+          ],
+          "stylesheet": "css/selectize.bootstrap3.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "comp_ui": {
+      "html": "<div class=\"row\">\n  <div class=\"col-sm-4\">\n    <div class=\"form-group shiny-input-container\">\n      <label class=\"control-label\" id=\"k1-label\" for=\"k1\">Feature Variable C1<\/label>\n      <div>\n        <select id=\"k1\"><option value=\"FSC.A\">FSC.A<\/option>\n<option value=\"FSC.H\">FSC.H<\/option>\n<option value=\"SSC.A\">SSC.A<\/option>\n<option value=\"SSC.B.A\">SSC.B.A<\/option>\n<option value=\"SSC.B.H\">SSC.B.H<\/option>\n<option value=\"SSC.H\">SSC.H<\/option>\n<option value=\"Comp.B1.A\">Comp.B1.A<\/option>\n<option value=\"Comp.B10.A\">Comp.B10.A<\/option>\n<option value=\"Comp.B11.A\">Comp.B11.A<\/option>\n<option value=\"Comp.B12.A\">Comp.B12.A<\/option>\n<option value=\"Comp.B13.A\">Comp.B13.A<\/option>\n<option value=\"Comp.B14.A\">Comp.B14.A<\/option>\n<option value=\"Comp.B2.A\">Comp.B2.A<\/option>\n<option value=\"Comp.B3.A\">Comp.B3.A<\/option>\n<option value=\"Comp.B4.A\">Comp.B4.A<\/option>\n<option value=\"Comp.B5.A\">Comp.B5.A<\/option>\n<option value=\"Comp.B6.A\">Comp.B6.A<\/option>\n<option value=\"Comp.B7.A\">Comp.B7.A<\/option>\n<option value=\"Comp.B8.A\">Comp.B8.A<\/option>\n<option value=\"Comp.B9.A\">Comp.B9.A<\/option>\n<option value=\"Comp.R1.A\">Comp.R1.A<\/option>\n<option value=\"Comp.R2.A\">Comp.R2.A<\/option>\n<option value=\"Comp.R3.A\">Comp.R3.A<\/option>\n<option value=\"Comp.R4.A\">Comp.R4.A<\/option>\n<option value=\"Comp.R5.A\">Comp.R5.A<\/option>\n<option value=\"Comp.R6.A\">Comp.R6.A<\/option>\n<option value=\"Comp.R7.A\">Comp.R7.A<\/option>\n<option value=\"Comp.R8.A\">Comp.R8.A<\/option>\n<option value=\"Comp.UV1.A\">Comp.UV1.A<\/option>\n<option value=\"Comp.UV10.A\">Comp.UV10.A<\/option>\n<option value=\"Comp.UV11.A\">Comp.UV11.A<\/option>\n<option value=\"Comp.UV12.A\">Comp.UV12.A<\/option>\n<option value=\"Comp.UV13.A\">Comp.UV13.A<\/option>\n<option value=\"Comp.UV14.A\">Comp.UV14.A<\/option>\n<option value=\"Comp.UV15.A\">Comp.UV15.A<\/option>\n<option value=\"Comp.UV16.A\">Comp.UV16.A<\/option>\n<option value=\"Comp.UV2.A\">Comp.UV2.A<\/option>\n<option value=\"Comp.UV3.A\">Comp.UV3.A<\/option>\n<option value=\"Comp.UV4.A\">Comp.UV4.A<\/option>\n<option value=\"Comp.UV5.A\">Comp.UV5.A<\/option>\n<option value=\"Comp.UV6.A\">Comp.UV6.A<\/option>\n<option value=\"Comp.UV7.A\">Comp.UV7.A<\/option>\n<option value=\"Comp.UV8.A\">Comp.UV8.A<\/option>\n<option value=\"Comp.UV9.A\">Comp.UV9.A<\/option>\n<option value=\"Comp.V1.A\">Comp.V1.A<\/option>\n<option value=\"Comp.V10.A\">Comp.V10.A<\/option>\n<option value=\"Comp.V11.A\">Comp.V11.A<\/option>\n<option value=\"Comp.V12.A\">Comp.V12.A<\/option>\n<option value=\"Comp.V13.A\">Comp.V13.A<\/option>\n<option value=\"Comp.V14.A\">Comp.V14.A<\/option>\n<option value=\"Comp.V15.A\">Comp.V15.A<\/option>\n<option value=\"Comp.V16.A\">Comp.V16.A<\/option>\n<option value=\"Comp.V2.A\">Comp.V2.A<\/option>\n<option value=\"Comp.V3.A\">Comp.V3.A<\/option>\n<option value=\"Comp.V4.A\">Comp.V4.A<\/option>\n<option value=\"Comp.V5.A\">Comp.V5.A<\/option>\n<option value=\"Comp.V6.A\">Comp.V6.A<\/option>\n<option value=\"Comp.V7.A\" selected>Comp.V7.A<\/option>\n<option value=\"Comp.V8.A\">Comp.V8.A<\/option>\n<option value=\"Comp.V9.A\">Comp.V9.A<\/option>\n<option value=\"Comp.YG1.A\">Comp.YG1.A<\/option>\n<option value=\"Comp.YG10.A\">Comp.YG10.A<\/option>\n<option value=\"Comp.YG2.A\">Comp.YG2.A<\/option>\n<option value=\"Comp.YG3.A\">Comp.YG3.A<\/option>\n<option value=\"Comp.YG4.A\">Comp.YG4.A<\/option>\n<option value=\"Comp.YG5.A\">Comp.YG5.A<\/option>\n<option value=\"Comp.YG6.A\">Comp.YG6.A<\/option>\n<option value=\"Comp.YG7.A\">Comp.YG7.A<\/option>\n<option value=\"Comp.YG8.A\">Comp.YG8.A<\/option>\n<option value=\"Comp.YG9.A\">Comp.YG9.A<\/option><\/select>\n        <script type=\"application/json\" data-for=\"k1\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n      <\/div>\n    <\/div>\n    <div class=\"shiny-plot-output html-fill-item\" id=\"kk1\" style=\"width:100%;height:400px;\"><\/div>\n  <\/div>\n  <div class=\"col-sm-4\">\n    <div class=\"form-group shiny-input-container\">\n      <label class=\"control-label\" id=\"k2-label\" for=\"k2\">Feature Variable C2<\/label>\n      <div>\n        <select id=\"k2\"><option value=\"FSC.A\">FSC.A<\/option>\n<option value=\"FSC.H\">FSC.H<\/option>\n<option value=\"SSC.A\">SSC.A<\/option>\n<option value=\"SSC.B.A\" selected>SSC.B.A<\/option>\n<option value=\"SSC.B.H\">SSC.B.H<\/option>\n<option value=\"SSC.H\">SSC.H<\/option>\n<option value=\"Comp.B1.A\">Comp.B1.A<\/option>\n<option value=\"Comp.B10.A\">Comp.B10.A<\/option>\n<option value=\"Comp.B11.A\">Comp.B11.A<\/option>\n<option value=\"Comp.B12.A\">Comp.B12.A<\/option>\n<option value=\"Comp.B13.A\">Comp.B13.A<\/option>\n<option value=\"Comp.B14.A\">Comp.B14.A<\/option>\n<option value=\"Comp.B2.A\">Comp.B2.A<\/option>\n<option value=\"Comp.B3.A\">Comp.B3.A<\/option>\n<option value=\"Comp.B4.A\">Comp.B4.A<\/option>\n<option value=\"Comp.B5.A\">Comp.B5.A<\/option>\n<option value=\"Comp.B6.A\">Comp.B6.A<\/option>\n<option value=\"Comp.B7.A\">Comp.B7.A<\/option>\n<option value=\"Comp.B8.A\">Comp.B8.A<\/option>\n<option value=\"Comp.B9.A\">Comp.B9.A<\/option>\n<option value=\"Comp.R1.A\">Comp.R1.A<\/option>\n<option value=\"Comp.R2.A\">Comp.R2.A<\/option>\n<option value=\"Comp.R3.A\">Comp.R3.A<\/option>\n<option value=\"Comp.R4.A\">Comp.R4.A<\/option>\n<option value=\"Comp.R5.A\">Comp.R5.A<\/option>\n<option value=\"Comp.R6.A\">Comp.R6.A<\/option>\n<option value=\"Comp.R7.A\">Comp.R7.A<\/option>\n<option value=\"Comp.R8.A\">Comp.R8.A<\/option>\n<option value=\"Comp.UV1.A\">Comp.UV1.A<\/option>\n<option value=\"Comp.UV10.A\">Comp.UV10.A<\/option>\n<option value=\"Comp.UV11.A\">Comp.UV11.A<\/option>\n<option value=\"Comp.UV12.A\">Comp.UV12.A<\/option>\n<option value=\"Comp.UV13.A\">Comp.UV13.A<\/option>\n<option value=\"Comp.UV14.A\">Comp.UV14.A<\/option>\n<option value=\"Comp.UV15.A\">Comp.UV15.A<\/option>\n<option value=\"Comp.UV16.A\">Comp.UV16.A<\/option>\n<option value=\"Comp.UV2.A\">Comp.UV2.A<\/option>\n<option value=\"Comp.UV3.A\">Comp.UV3.A<\/option>\n<option value=\"Comp.UV4.A\">Comp.UV4.A<\/option>\n<option value=\"Comp.UV5.A\">Comp.UV5.A<\/option>\n<option value=\"Comp.UV6.A\">Comp.UV6.A<\/option>\n<option value=\"Comp.UV7.A\">Comp.UV7.A<\/option>\n<option value=\"Comp.UV8.A\">Comp.UV8.A<\/option>\n<option value=\"Comp.UV9.A\">Comp.UV9.A<\/option>\n<option value=\"Comp.V1.A\">Comp.V1.A<\/option>\n<option value=\"Comp.V10.A\">Comp.V10.A<\/option>\n<option value=\"Comp.V11.A\">Comp.V11.A<\/option>\n<option value=\"Comp.V12.A\">Comp.V12.A<\/option>\n<option value=\"Comp.V13.A\">Comp.V13.A<\/option>\n<option value=\"Comp.V14.A\">Comp.V14.A<\/option>\n<option value=\"Comp.V15.A\">Comp.V15.A<\/option>\n<option value=\"Comp.V16.A\">Comp.V16.A<\/option>\n<option value=\"Comp.V2.A\">Comp.V2.A<\/option>\n<option value=\"Comp.V3.A\">Comp.V3.A<\/option>\n<option value=\"Comp.V4.A\">Comp.V4.A<\/option>\n<option value=\"Comp.V5.A\">Comp.V5.A<\/option>\n<option value=\"Comp.V6.A\">Comp.V6.A<\/option>\n<option value=\"Comp.V7.A\">Comp.V7.A<\/option>\n<option value=\"Comp.V8.A\">Comp.V8.A<\/option>\n<option value=\"Comp.V9.A\">Comp.V9.A<\/option>\n<option value=\"Comp.YG1.A\">Comp.YG1.A<\/option>\n<option value=\"Comp.YG10.A\">Comp.YG10.A<\/option>\n<option value=\"Comp.YG2.A\">Comp.YG2.A<\/option>\n<option value=\"Comp.YG3.A\">Comp.YG3.A<\/option>\n<option value=\"Comp.YG4.A\">Comp.YG4.A<\/option>\n<option value=\"Comp.YG5.A\">Comp.YG5.A<\/option>\n<option value=\"Comp.YG6.A\">Comp.YG6.A<\/option>\n<option value=\"Comp.YG7.A\">Comp.YG7.A<\/option>\n<option value=\"Comp.YG8.A\">Comp.YG8.A<\/option>\n<option value=\"Comp.YG9.A\">Comp.YG9.A<\/option><\/select>\n        <script type=\"application/json\" data-for=\"k2\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n      <\/div>\n    <\/div>\n    <div class=\"shiny-plot-output html-fill-item\" id=\"kk2\" style=\"width:100%;height:400px;\"><\/div>\n  <\/div>\n  <div class=\"col-sm-4\">\n    <div class=\"form-group shiny-input-container\">\n      <label class=\"control-label\" id=\"k3-label\" for=\"k3\">Feature Variable C3<\/label>\n      <div>\n        <select id=\"k3\"><option value=\"FSC.A\">FSC.A<\/option>\n<option value=\"FSC.H\">FSC.H<\/option>\n<option value=\"SSC.A\">SSC.A<\/option>\n<option value=\"SSC.B.A\">SSC.B.A<\/option>\n<option value=\"SSC.B.H\">SSC.B.H<\/option>\n<option value=\"SSC.H\">SSC.H<\/option>\n<option value=\"Comp.B1.A\">Comp.B1.A<\/option>\n<option value=\"Comp.B10.A\">Comp.B10.A<\/option>\n<option value=\"Comp.B11.A\">Comp.B11.A<\/option>\n<option value=\"Comp.B12.A\">Comp.B12.A<\/option>\n<option value=\"Comp.B13.A\">Comp.B13.A<\/option>\n<option value=\"Comp.B14.A\">Comp.B14.A<\/option>\n<option value=\"Comp.B2.A\">Comp.B2.A<\/option>\n<option value=\"Comp.B3.A\">Comp.B3.A<\/option>\n<option value=\"Comp.B4.A\">Comp.B4.A<\/option>\n<option value=\"Comp.B5.A\">Comp.B5.A<\/option>\n<option value=\"Comp.B6.A\">Comp.B6.A<\/option>\n<option value=\"Comp.B7.A\">Comp.B7.A<\/option>\n<option value=\"Comp.B8.A\">Comp.B8.A<\/option>\n<option value=\"Comp.B9.A\">Comp.B9.A<\/option>\n<option value=\"Comp.R1.A\">Comp.R1.A<\/option>\n<option value=\"Comp.R2.A\">Comp.R2.A<\/option>\n<option value=\"Comp.R3.A\">Comp.R3.A<\/option>\n<option value=\"Comp.R4.A\">Comp.R4.A<\/option>\n<option value=\"Comp.R5.A\">Comp.R5.A<\/option>\n<option value=\"Comp.R6.A\">Comp.R6.A<\/option>\n<option value=\"Comp.R7.A\">Comp.R7.A<\/option>\n<option value=\"Comp.R8.A\">Comp.R8.A<\/option>\n<option value=\"Comp.UV1.A\">Comp.UV1.A<\/option>\n<option value=\"Comp.UV10.A\">Comp.UV10.A<\/option>\n<option value=\"Comp.UV11.A\">Comp.UV11.A<\/option>\n<option value=\"Comp.UV12.A\">Comp.UV12.A<\/option>\n<option value=\"Comp.UV13.A\">Comp.UV13.A<\/option>\n<option value=\"Comp.UV14.A\">Comp.UV14.A<\/option>\n<option value=\"Comp.UV15.A\">Comp.UV15.A<\/option>\n<option value=\"Comp.UV16.A\">Comp.UV16.A<\/option>\n<option value=\"Comp.UV2.A\">Comp.UV2.A<\/option>\n<option value=\"Comp.UV3.A\">Comp.UV3.A<\/option>\n<option value=\"Comp.UV4.A\">Comp.UV4.A<\/option>\n<option value=\"Comp.UV5.A\">Comp.UV5.A<\/option>\n<option value=\"Comp.UV6.A\">Comp.UV6.A<\/option>\n<option value=\"Comp.UV7.A\" selected>Comp.UV7.A<\/option>\n<option value=\"Comp.UV8.A\">Comp.UV8.A<\/option>\n<option value=\"Comp.UV9.A\">Comp.UV9.A<\/option>\n<option value=\"Comp.V1.A\">Comp.V1.A<\/option>\n<option value=\"Comp.V10.A\">Comp.V10.A<\/option>\n<option value=\"Comp.V11.A\">Comp.V11.A<\/option>\n<option value=\"Comp.V12.A\">Comp.V12.A<\/option>\n<option value=\"Comp.V13.A\">Comp.V13.A<\/option>\n<option value=\"Comp.V14.A\">Comp.V14.A<\/option>\n<option value=\"Comp.V15.A\">Comp.V15.A<\/option>\n<option value=\"Comp.V16.A\">Comp.V16.A<\/option>\n<option value=\"Comp.V2.A\">Comp.V2.A<\/option>\n<option value=\"Comp.V3.A\">Comp.V3.A<\/option>\n<option value=\"Comp.V4.A\">Comp.V4.A<\/option>\n<option value=\"Comp.V5.A\">Comp.V5.A<\/option>\n<option value=\"Comp.V6.A\">Comp.V6.A<\/option>\n<option value=\"Comp.V7.A\">Comp.V7.A<\/option>\n<option value=\"Comp.V8.A\">Comp.V8.A<\/option>\n<option value=\"Comp.V9.A\">Comp.V9.A<\/option>\n<option value=\"Comp.YG1.A\">Comp.YG1.A<\/option>\n<option value=\"Comp.YG10.A\">Comp.YG10.A<\/option>\n<option value=\"Comp.YG2.A\">Comp.YG2.A<\/option>\n<option value=\"Comp.YG3.A\">Comp.YG3.A<\/option>\n<option value=\"Comp.YG4.A\">Comp.YG4.A<\/option>\n<option value=\"Comp.YG5.A\">Comp.YG5.A<\/option>\n<option value=\"Comp.YG6.A\">Comp.YG6.A<\/option>\n<option value=\"Comp.YG7.A\">Comp.YG7.A<\/option>\n<option value=\"Comp.YG8.A\">Comp.YG8.A<\/option>\n<option value=\"Comp.YG9.A\">Comp.YG9.A<\/option><\/select>\n        <script type=\"application/json\" data-for=\"k3\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n      <\/div>\n    <\/div>\n    <div class=\"shiny-plot-output html-fill-item\" id=\"kk3\" style=\"width:100%;height:400px;\"><\/div>\n  <\/div>\n<\/div>\n<div class=\"row\">\n  <div class=\"col-sm-4\">\n    <div class=\"form-group shiny-input-container\">\n      <label class=\"control-label\" id=\"k4-label\" for=\"k4\">Feature Variable C4<\/label>\n      <div>\n        <select id=\"k4\"><option value=\"FSC.A\">FSC.A<\/option>\n<option value=\"FSC.H\">FSC.H<\/option>\n<option value=\"SSC.A\">SSC.A<\/option>\n<option value=\"SSC.B.A\">SSC.B.A<\/option>\n<option value=\"SSC.B.H\">SSC.B.H<\/option>\n<option value=\"SSC.H\">SSC.H<\/option>\n<option value=\"Comp.B1.A\">Comp.B1.A<\/option>\n<option value=\"Comp.B10.A\">Comp.B10.A<\/option>\n<option value=\"Comp.B11.A\">Comp.B11.A<\/option>\n<option value=\"Comp.B12.A\">Comp.B12.A<\/option>\n<option value=\"Comp.B13.A\">Comp.B13.A<\/option>\n<option value=\"Comp.B14.A\">Comp.B14.A<\/option>\n<option value=\"Comp.B2.A\">Comp.B2.A<\/option>\n<option value=\"Comp.B3.A\">Comp.B3.A<\/option>\n<option value=\"Comp.B4.A\">Comp.B4.A<\/option>\n<option value=\"Comp.B5.A\">Comp.B5.A<\/option>\n<option value=\"Comp.B6.A\">Comp.B6.A<\/option>\n<option value=\"Comp.B7.A\">Comp.B7.A<\/option>\n<option value=\"Comp.B8.A\">Comp.B8.A<\/option>\n<option value=\"Comp.B9.A\">Comp.B9.A<\/option>\n<option value=\"Comp.R1.A\">Comp.R1.A<\/option>\n<option value=\"Comp.R2.A\">Comp.R2.A<\/option>\n<option value=\"Comp.R3.A\">Comp.R3.A<\/option>\n<option value=\"Comp.R4.A\">Comp.R4.A<\/option>\n<option value=\"Comp.R5.A\">Comp.R5.A<\/option>\n<option value=\"Comp.R6.A\">Comp.R6.A<\/option>\n<option value=\"Comp.R7.A\">Comp.R7.A<\/option>\n<option value=\"Comp.R8.A\">Comp.R8.A<\/option>\n<option value=\"Comp.UV1.A\">Comp.UV1.A<\/option>\n<option value=\"Comp.UV10.A\">Comp.UV10.A<\/option>\n<option value=\"Comp.UV11.A\">Comp.UV11.A<\/option>\n<option value=\"Comp.UV12.A\">Comp.UV12.A<\/option>\n<option value=\"Comp.UV13.A\">Comp.UV13.A<\/option>\n<option value=\"Comp.UV14.A\">Comp.UV14.A<\/option>\n<option value=\"Comp.UV15.A\">Comp.UV15.A<\/option>\n<option value=\"Comp.UV16.A\">Comp.UV16.A<\/option>\n<option value=\"Comp.UV2.A\">Comp.UV2.A<\/option>\n<option value=\"Comp.UV3.A\">Comp.UV3.A<\/option>\n<option value=\"Comp.UV4.A\">Comp.UV4.A<\/option>\n<option value=\"Comp.UV5.A\">Comp.UV5.A<\/option>\n<option value=\"Comp.UV6.A\">Comp.UV6.A<\/option>\n<option value=\"Comp.UV7.A\">Comp.UV7.A<\/option>\n<option value=\"Comp.UV8.A\">Comp.UV8.A<\/option>\n<option value=\"Comp.UV9.A\">Comp.UV9.A<\/option>\n<option value=\"Comp.V1.A\">Comp.V1.A<\/option>\n<option value=\"Comp.V10.A\">Comp.V10.A<\/option>\n<option value=\"Comp.V11.A\">Comp.V11.A<\/option>\n<option value=\"Comp.V12.A\" selected>Comp.V12.A<\/option>\n<option value=\"Comp.V13.A\">Comp.V13.A<\/option>\n<option value=\"Comp.V14.A\">Comp.V14.A<\/option>\n<option value=\"Comp.V15.A\">Comp.V15.A<\/option>\n<option value=\"Comp.V16.A\">Comp.V16.A<\/option>\n<option value=\"Comp.V2.A\">Comp.V2.A<\/option>\n<option value=\"Comp.V3.A\">Comp.V3.A<\/option>\n<option value=\"Comp.V4.A\">Comp.V4.A<\/option>\n<option value=\"Comp.V5.A\">Comp.V5.A<\/option>\n<option value=\"Comp.V6.A\">Comp.V6.A<\/option>\n<option value=\"Comp.V7.A\">Comp.V7.A<\/option>\n<option value=\"Comp.V8.A\">Comp.V8.A<\/option>\n<option value=\"Comp.V9.A\">Comp.V9.A<\/option>\n<option value=\"Comp.YG1.A\">Comp.YG1.A<\/option>\n<option value=\"Comp.YG10.A\">Comp.YG10.A<\/option>\n<option value=\"Comp.YG2.A\">Comp.YG2.A<\/option>\n<option value=\"Comp.YG3.A\">Comp.YG3.A<\/option>\n<option value=\"Comp.YG4.A\">Comp.YG4.A<\/option>\n<option value=\"Comp.YG5.A\">Comp.YG5.A<\/option>\n<option value=\"Comp.YG6.A\">Comp.YG6.A<\/option>\n<option value=\"Comp.YG7.A\">Comp.YG7.A<\/option>\n<option value=\"Comp.YG8.A\">Comp.YG8.A<\/option>\n<option value=\"Comp.YG9.A\">Comp.YG9.A<\/option><\/select>\n        <script type=\"application/json\" data-for=\"k4\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n      <\/div>\n    <\/div>\n    <div class=\"shiny-plot-output html-fill-item\" id=\"kk4\" style=\"width:100%;height:400px;\"><\/div>\n  <\/div>\n  <div class=\"col-sm-4\">\n    <div class=\"form-group shiny-input-container\">\n      <label class=\"control-label\" id=\"k5-label\" for=\"k5\">Feature Variable C5<\/label>\n      <div>\n        <select id=\"k5\"><option value=\"FSC.A\">FSC.A<\/option>\n<option value=\"FSC.H\">FSC.H<\/option>\n<option value=\"SSC.A\">SSC.A<\/option>\n<option value=\"SSC.B.A\">SSC.B.A<\/option>\n<option value=\"SSC.B.H\">SSC.B.H<\/option>\n<option value=\"SSC.H\">SSC.H<\/option>\n<option value=\"Comp.B1.A\">Comp.B1.A<\/option>\n<option value=\"Comp.B10.A\">Comp.B10.A<\/option>\n<option value=\"Comp.B11.A\">Comp.B11.A<\/option>\n<option value=\"Comp.B12.A\">Comp.B12.A<\/option>\n<option value=\"Comp.B13.A\">Comp.B13.A<\/option>\n<option value=\"Comp.B14.A\">Comp.B14.A<\/option>\n<option value=\"Comp.B2.A\">Comp.B2.A<\/option>\n<option value=\"Comp.B3.A\">Comp.B3.A<\/option>\n<option value=\"Comp.B4.A\">Comp.B4.A<\/option>\n<option value=\"Comp.B5.A\">Comp.B5.A<\/option>\n<option value=\"Comp.B6.A\">Comp.B6.A<\/option>\n<option value=\"Comp.B7.A\">Comp.B7.A<\/option>\n<option value=\"Comp.B8.A\">Comp.B8.A<\/option>\n<option value=\"Comp.B9.A\">Comp.B9.A<\/option>\n<option value=\"Comp.R1.A\">Comp.R1.A<\/option>\n<option value=\"Comp.R2.A\">Comp.R2.A<\/option>\n<option value=\"Comp.R3.A\">Comp.R3.A<\/option>\n<option value=\"Comp.R4.A\">Comp.R4.A<\/option>\n<option value=\"Comp.R5.A\">Comp.R5.A<\/option>\n<option value=\"Comp.R6.A\">Comp.R6.A<\/option>\n<option value=\"Comp.R7.A\">Comp.R7.A<\/option>\n<option value=\"Comp.R8.A\">Comp.R8.A<\/option>\n<option value=\"Comp.UV1.A\">Comp.UV1.A<\/option>\n<option value=\"Comp.UV10.A\">Comp.UV10.A<\/option>\n<option value=\"Comp.UV11.A\">Comp.UV11.A<\/option>\n<option value=\"Comp.UV12.A\">Comp.UV12.A<\/option>\n<option value=\"Comp.UV13.A\">Comp.UV13.A<\/option>\n<option value=\"Comp.UV14.A\">Comp.UV14.A<\/option>\n<option value=\"Comp.UV15.A\">Comp.UV15.A<\/option>\n<option value=\"Comp.UV16.A\">Comp.UV16.A<\/option>\n<option value=\"Comp.UV2.A\">Comp.UV2.A<\/option>\n<option value=\"Comp.UV3.A\">Comp.UV3.A<\/option>\n<option value=\"Comp.UV4.A\">Comp.UV4.A<\/option>\n<option value=\"Comp.UV5.A\">Comp.UV5.A<\/option>\n<option value=\"Comp.UV6.A\">Comp.UV6.A<\/option>\n<option value=\"Comp.UV7.A\">Comp.UV7.A<\/option>\n<option value=\"Comp.UV8.A\">Comp.UV8.A<\/option>\n<option value=\"Comp.UV9.A\">Comp.UV9.A<\/option>\n<option value=\"Comp.V1.A\">Comp.V1.A<\/option>\n<option value=\"Comp.V10.A\">Comp.V10.A<\/option>\n<option value=\"Comp.V11.A\" selected>Comp.V11.A<\/option>\n<option value=\"Comp.V12.A\">Comp.V12.A<\/option>\n<option value=\"Comp.V13.A\">Comp.V13.A<\/option>\n<option value=\"Comp.V14.A\">Comp.V14.A<\/option>\n<option value=\"Comp.V15.A\">Comp.V15.A<\/option>\n<option value=\"Comp.V16.A\">Comp.V16.A<\/option>\n<option value=\"Comp.V2.A\">Comp.V2.A<\/option>\n<option value=\"Comp.V3.A\">Comp.V3.A<\/option>\n<option value=\"Comp.V4.A\">Comp.V4.A<\/option>\n<option value=\"Comp.V5.A\">Comp.V5.A<\/option>\n<option value=\"Comp.V6.A\">Comp.V6.A<\/option>\n<option value=\"Comp.V7.A\">Comp.V7.A<\/option>\n<option value=\"Comp.V8.A\">Comp.V8.A<\/option>\n<option value=\"Comp.V9.A\">Comp.V9.A<\/option>\n<option value=\"Comp.YG1.A\">Comp.YG1.A<\/option>\n<option value=\"Comp.YG10.A\">Comp.YG10.A<\/option>\n<option value=\"Comp.YG2.A\">Comp.YG2.A<\/option>\n<option value=\"Comp.YG3.A\">Comp.YG3.A<\/option>\n<option value=\"Comp.YG4.A\">Comp.YG4.A<\/option>\n<option value=\"Comp.YG5.A\">Comp.YG5.A<\/option>\n<option value=\"Comp.YG6.A\">Comp.YG6.A<\/option>\n<option value=\"Comp.YG7.A\">Comp.YG7.A<\/option>\n<option value=\"Comp.YG8.A\">Comp.YG8.A<\/option>\n<option value=\"Comp.YG9.A\">Comp.YG9.A<\/option><\/select>\n        <script type=\"application/json\" data-for=\"k5\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n      <\/div>\n    <\/div>\n    <div class=\"shiny-plot-output html-fill-item\" id=\"kk5\" style=\"width:100%;height:400px;\"><\/div>\n  <\/div>\n<\/div>",
+      "deps": [
+        {
+          "name": "selectize",
+          "version": "0.12.4",
+          "src": {
+            "href": "selectize-0.12.4"
+          },
+          "meta": null,
+          "script": [
+            "js/selectize.min.js",
+            "accessibility/js/selectize-plugin-a11y.min.js"
+          ],
+          "stylesheet": "css/selectize.bootstrap3.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "composition_ui": {
+      "src": "[image data sha1: 3e64bbfe86284770854c7e897272109a76c12e9d]",
+      "width": 611.328125,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "panel": 1,
+            "row": 1,
+            "col": 1,
+            "panel_vars": {
+
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "domain": {
+              "left": 0.4,
+              "right": 20.6,
+              "bottom": -5,
+              "top": 105,
+              "discrete_limits": {
+                "x": [
+                  "1",
+                  "10",
+                  "11",
+                  "12",
+                  "13",
+                  "14",
+                  "15",
+                  "16",
+                  "17",
+                  "18",
+                  "19",
+                  "2",
+                  "20",
+                  "3",
+                  "4",
+                  "5",
+                  "6",
+                  "7",
+                  "8",
+                  "9"
+                ]
+              }
+            },
+            "mapping": {
+              "x": ".data$SampleID",
+              "y": ".data$pct",
+              "fill": ".data$cluster"
+            },
+            "range": {
+              "left": 42.8225599315069,
+              "right": 548.758989726027,
+              "bottom": 363.846473150198,
+              "top": 5.47945205479452
+            }
+          }
+        ],
+        "dims": {
+          "width": 611.328125,
+          "height": 400
+        }
+      }
+    },
+    "contents": {
+      "x": {
+        "filter": "none",
+        "vertical": false,
+        "container": "<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>SampleID<\/th>\n      <th>FSC.A<\/th>\n      <th>FSC.H<\/th>\n      <th>SSC.A<\/th>\n      <th>SSC.B.A<\/th>\n      <th>SSC.B.H<\/th>\n      <th>SSC.H<\/th>\n      <th>Comp.B1.A<\/th>\n      <th>Comp.B10.A<\/th>\n      <th>Comp.B11.A<\/th>\n      <th>Comp.B12.A<\/th>\n      <th>Comp.B13.A<\/th>\n      <th>Comp.B14.A<\/th>\n      <th>Comp.B2.A<\/th>\n      <th>Comp.B3.A<\/th>\n      <th>Comp.B4.A<\/th>\n      <th>Comp.B5.A<\/th>\n      <th>Comp.B6.A<\/th>\n      <th>Comp.B7.A<\/th>\n      <th>Comp.B8.A<\/th>\n      <th>Comp.B9.A<\/th>\n      <th>Comp.R1.A<\/th>\n      <th>Comp.R2.A<\/th>\n      <th>Comp.R3.A<\/th>\n      <th>Comp.R4.A<\/th>\n      <th>Comp.R5.A<\/th>\n      <th>Comp.R6.A<\/th>\n      <th>Comp.R7.A<\/th>\n      <th>Comp.R8.A<\/th>\n      <th>Comp.UV1.A<\/th>\n      <th>Comp.UV10.A<\/th>\n      <th>Comp.UV11.A<\/th>\n      <th>Comp.UV12.A<\/th>\n      <th>Comp.UV13.A<\/th>\n      <th>Comp.UV14.A<\/th>\n      <th>Comp.UV15.A<\/th>\n      <th>Comp.UV16.A<\/th>\n      <th>Comp.UV2.A<\/th>\n      <th>Comp.UV3.A<\/th>\n      <th>Comp.UV4.A<\/th>\n      <th>Comp.UV5.A<\/th>\n      <th>Comp.UV6.A<\/th>\n      <th>Comp.UV7.A<\/th>\n      <th>Comp.UV8.A<\/th>\n      <th>Comp.UV9.A<\/th>\n      <th>Comp.V1.A<\/th>\n      <th>Comp.V10.A<\/th>\n      <th>Comp.V11.A<\/th>\n      <th>Comp.V12.A<\/th>\n      <th>Comp.V13.A<\/th>\n      <th>Comp.V14.A<\/th>\n      <th>Comp.V15.A<\/th>\n      <th>Comp.V16.A<\/th>\n      <th>Comp.V2.A<\/th>\n      <th>Comp.V3.A<\/th>\n      <th>Comp.V4.A<\/th>\n      <th>Comp.V5.A<\/th>\n      <th>Comp.V6.A<\/th>\n      <th>Comp.V7.A<\/th>\n      <th>Comp.V8.A<\/th>\n      <th>Comp.V9.A<\/th>\n      <th>Comp.YG1.A<\/th>\n      <th>Comp.YG10.A<\/th>\n      <th>Comp.YG2.A<\/th>\n      <th>Comp.YG3.A<\/th>\n      <th>Comp.YG4.A<\/th>\n      <th>Comp.YG5.A<\/th>\n      <th>Comp.YG6.A<\/th>\n      <th>Comp.YG7.A<\/th>\n      <th>Comp.YG8.A<\/th>\n      <th>Comp.YG9.A<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>",
+        "options": {
+          "columnDefs": [
+            {
+              "className": "dt-right",
+              "targets": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71
+              ]
+            },
+            {
+              "orderable": false,
+              "targets": 0
+            }
+          ],
+          "order": [
+
+          ],
+          "autoWidth": false,
+          "orderClasses": false,
+          "ajax": {
+            "type": "POST",
+            "data": "function(d) {\nd.search.caseInsensitive = true;\nd.search.smart = true;\nd.escape = true;\nvar encodeAmp = function(x) { x.value = x.value.replace(/&/g, \"%26\"); }\nencodeAmp(d.search);\n$.each(d.columns, function(i, v) {encodeAmp(v.search);});\n}"
+          },
+          "serverSide": true,
+          "processing": true
+        },
+        "selection": {
+          "mode": "multiple",
+          "selected": null,
+          "target": "row",
+          "selectable": null
+        }
+      },
+      "evals": [
+        "options.ajax.data"
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "jquery",
+          "version": "3.6.0",
+          "src": {
+            "href": "jquery-3.6.0"
+          },
+          "meta": null,
+          "script": "jquery-3.6.0.min.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        },
+        {
+          "name": "dt-core",
+          "version": "1.12.1",
+          "src": {
+            "href": "dt-core-1.12.1"
+          },
+          "meta": null,
+          "script": "js/jquery.dataTables.min.js",
+          "stylesheet": [
+            "css/jquery.dataTables.min.css",
+            "css/jquery.dataTables.extra.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "package": null,
+          "all_files": false
+        },
+        {
+          "name": "crosstalk",
+          "version": "1.2.0",
+          "src": {
+            "href": "crosstalk-1.2.0"
+          },
+          "meta": null,
+          "script": "js/crosstalk.min.js",
+          "stylesheet": "css/crosstalk.min.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "feats_plot": {
+      "src": "[image data sha1: c1ebe9943ce2bc4654d03b8b9a43665733e9ae73]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "meta_sel": {
+      "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"meta_val-label\" for=\"meta_val\">Group variable<\/label>\n  <div>\n    <select id=\"meta_val\"><option value=\"ID\" selected>ID<\/option>\n<option value=\"Group\">Group<\/option><\/select>\n    <script type=\"application/json\" data-for=\"meta_val\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n  <\/div>\n<\/div>",
+      "deps": [
+        {
+          "name": "selectize",
+          "version": "0.12.4",
+          "src": {
+            "href": "selectize-0.12.4"
+          },
+          "meta": null,
+          "script": [
+            "js/selectize.min.js",
+            "accessibility/js/selectize-plugin-a11y.min.js"
+          ],
+          "stylesheet": "css/selectize.bootstrap3.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "metadata": {
+      "x": {
+        "filter": "none",
+        "vertical": false,
+        "container": "<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ID<\/th>\n      <th>Group<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>",
+        "options": {
+          "columnDefs": [
+            {
+              "className": "dt-right",
+              "targets": 1
+            },
+            {
+              "orderable": false,
+              "targets": 0
+            }
+          ],
+          "order": [
+
+          ],
+          "autoWidth": false,
+          "orderClasses": false,
+          "ajax": {
+            "type": "POST",
+            "data": "function(d) {\nd.search.caseInsensitive = true;\nd.search.smart = true;\nd.escape = true;\nvar encodeAmp = function(x) { x.value = x.value.replace(/&/g, \"%26\"); }\nencodeAmp(d.search);\n$.each(d.columns, function(i, v) {encodeAmp(v.search);});\n}"
+          },
+          "serverSide": true,
+          "processing": true
+        },
+        "selection": {
+          "mode": "multiple",
+          "selected": null,
+          "target": "row",
+          "selectable": null
+        }
+      },
+      "evals": [
+        "options.ajax.data"
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "jquery",
+          "version": "3.6.0",
+          "src": {
+            "href": "jquery-3.6.0"
+          },
+          "meta": null,
+          "script": "jquery-3.6.0.min.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        },
+        {
+          "name": "dt-core",
+          "version": "1.12.1",
+          "src": {
+            "href": "dt-core-1.12.1"
+          },
+          "meta": null,
+          "script": "js/jquery.dataTables.min.js",
+          "stylesheet": [
+            "css/jquery.dataTables.min.css",
+            "css/jquery.dataTables.extra.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "package": null,
+          "all_files": false
+        },
+        {
+          "name": "crosstalk",
+          "version": "1.2.0",
+          "src": {
+            "href": "crosstalk-1.2.0"
+          },
+          "meta": null,
+          "script": "js/crosstalk.min.js",
+          "stylesheet": "css/crosstalk.min.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "pca_k_plot": {
+      "src": "[image data sha1: a83a3672198f40f8b3978f8a9cd309bb4ca3bb40]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "pca_plot": {
+      "src": "[image data sha1: cee125657bcfbefe2d468c79d80bf36eddd94836]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "samp_p_pca": {
+      "src": "[image data sha1: bafaa34f3decba266ad539baa2d63f7debfbfcb3]",
+      "width": 611.328125,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 611.328125,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 611.328125,
+          "height": 400
+        }
+      }
+    },
+    "samp_pca": {
+      "src": "[image data sha1: baec048932cf54f53e878b7731ec80c163015448]",
+      "width": 611.328125,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 611.328125,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 611.328125,
+          "height": 400
+        }
+      }
+    },
+    "samp_t_pca": {
+      "src": "[image data sha1: 06d86aeac9ea934393780cdfa7346d92121ec1d0]",
+      "width": 611.328125,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 611.328125,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 611.328125,
+          "height": 400
+        }
+      }
+    },
+    "sample_var": {
+      "src": "[image data sha1: a7ce23f1db303106f7efb6a4372bda122dd7e1fc]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "show_dimreduct_legend": {
+      "html": "<div id=\"show_hide_dimreduct_legend\" class=\"form-group shiny-input-radiogroup shiny-input-container\" role=\"radiogroup\" aria-labelledby=\"show_hide_dimreduct_legend-label\">\n  <label class=\"control-label\" id=\"show_hide_dimreduct_legend-label\" for=\"show_hide_dimreduct_legend\">Dimensionality Reduction Legend<\/label>\n  <div class=\"shiny-options-group\">\n    <div class=\"radio\">\n      <label>\n        <input type=\"radio\" name=\"show_hide_dimreduct_legend\" value=\"Show\"/>\n        <span>Show<\/span>\n      <\/label>\n    <\/div>\n    <div class=\"radio\">\n      <label>\n        <input type=\"radio\" name=\"show_hide_dimreduct_legend\" value=\"Hide\" checked=\"checked\"/>\n        <span>Hide<\/span>\n      <\/label>\n    <\/div>\n  <\/div>\n<\/div>",
+      "deps": [
+
+      ]
+    },
+    "tsne_k_plot": {
+      "src": "[image data sha1: 7356e7b4808e854dc1e3b9103f439e438681a69f]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "tsne_plot": {
+      "src": "[image data sha1: 489d80b8300ec9bb70d40b0b4fd1bfac768a0509]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "umap_k_plot": {
+      "src": "[image data sha1: 62341c4a477ae90e4aad852cff4a2167309b303f]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "umap_plot": {
+      "src": "[image data sha1: dc7580092124a9eb263f35962cb42b4497970458]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    }
+  },
+  "export": {
+
+  }
+}

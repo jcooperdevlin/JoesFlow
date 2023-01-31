@@ -1,0 +1,499 @@
+{
+  "input": {
+    "clust_type": "Kmeans",
+    "colpal": "Default",
+    "download_height": 10,
+    "download_width": 15,
+    "feat_dim": " ",
+    "file1": null,
+    "file2": null,
+    "kmean": 5,
+    "main_output": "PCA",
+    "meta_val": "ID",
+    "nav_bar": "Visualize",
+    "seed": 247893,
+    "show_hide_cluster_legend": "Hide",
+    "show_hide_dimreduct_legend": "Hide",
+    "subsample": 0.2
+  },
+  "output": {
+    "cluster_setting": {
+      "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"kmean-label\" for=\"kmean\">Number of clusters:<\/label>\n  <input id=\"kmean\" type=\"number\" class=\"form-control\" value=\"5\" min=\"2\"/>\n<\/div>",
+      "deps": [
+
+      ]
+    },
+    "col_pal": {
+      "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"colpal-label\" for=\"colpal\">Select Color Palette<\/label>\n  <div>\n    <select id=\"colpal\"><option value=\"Default\" selected>Default<\/option>\n<option value=\"Dark2\">Dark2<\/option>\n<option value=\"Paired\">Paired<\/option>\n<option value=\"Set2\">Set2<\/option><\/select>\n    <script type=\"application/json\" data-for=\"colpal\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n  <\/div>\n<\/div>",
+      "deps": [
+        {
+          "name": "selectize",
+          "version": "0.12.4",
+          "src": {
+            "href": "selectize-0.12.4"
+          },
+          "meta": null,
+          "script": [
+            "js/selectize.min.js",
+            "accessibility/js/selectize-plugin-a11y.min.js"
+          ],
+          "stylesheet": "css/selectize.bootstrap3.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "contents": {
+      "x": {
+        "filter": "none",
+        "vertical": false,
+        "container": "<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>SampleID<\/th>\n      <th>FSC.A<\/th>\n      <th>FSC.H<\/th>\n      <th>SSC.A<\/th>\n      <th>SSC.B.A<\/th>\n      <th>SSC.B.H<\/th>\n      <th>SSC.H<\/th>\n      <th>Comp.B1.A<\/th>\n      <th>Comp.B10.A<\/th>\n      <th>Comp.B11.A<\/th>\n      <th>Comp.B12.A<\/th>\n      <th>Comp.B13.A<\/th>\n      <th>Comp.B14.A<\/th>\n      <th>Comp.B2.A<\/th>\n      <th>Comp.B3.A<\/th>\n      <th>Comp.B4.A<\/th>\n      <th>Comp.B5.A<\/th>\n      <th>Comp.B6.A<\/th>\n      <th>Comp.B7.A<\/th>\n      <th>Comp.B8.A<\/th>\n      <th>Comp.B9.A<\/th>\n      <th>Comp.R1.A<\/th>\n      <th>Comp.R2.A<\/th>\n      <th>Comp.R3.A<\/th>\n      <th>Comp.R4.A<\/th>\n      <th>Comp.R5.A<\/th>\n      <th>Comp.R6.A<\/th>\n      <th>Comp.R7.A<\/th>\n      <th>Comp.R8.A<\/th>\n      <th>Comp.UV1.A<\/th>\n      <th>Comp.UV10.A<\/th>\n      <th>Comp.UV11.A<\/th>\n      <th>Comp.UV12.A<\/th>\n      <th>Comp.UV13.A<\/th>\n      <th>Comp.UV14.A<\/th>\n      <th>Comp.UV15.A<\/th>\n      <th>Comp.UV16.A<\/th>\n      <th>Comp.UV2.A<\/th>\n      <th>Comp.UV3.A<\/th>\n      <th>Comp.UV4.A<\/th>\n      <th>Comp.UV5.A<\/th>\n      <th>Comp.UV6.A<\/th>\n      <th>Comp.UV7.A<\/th>\n      <th>Comp.UV8.A<\/th>\n      <th>Comp.UV9.A<\/th>\n      <th>Comp.V1.A<\/th>\n      <th>Comp.V10.A<\/th>\n      <th>Comp.V11.A<\/th>\n      <th>Comp.V12.A<\/th>\n      <th>Comp.V13.A<\/th>\n      <th>Comp.V14.A<\/th>\n      <th>Comp.V15.A<\/th>\n      <th>Comp.V16.A<\/th>\n      <th>Comp.V2.A<\/th>\n      <th>Comp.V3.A<\/th>\n      <th>Comp.V4.A<\/th>\n      <th>Comp.V5.A<\/th>\n      <th>Comp.V6.A<\/th>\n      <th>Comp.V7.A<\/th>\n      <th>Comp.V8.A<\/th>\n      <th>Comp.V9.A<\/th>\n      <th>Comp.YG1.A<\/th>\n      <th>Comp.YG10.A<\/th>\n      <th>Comp.YG2.A<\/th>\n      <th>Comp.YG3.A<\/th>\n      <th>Comp.YG4.A<\/th>\n      <th>Comp.YG5.A<\/th>\n      <th>Comp.YG6.A<\/th>\n      <th>Comp.YG7.A<\/th>\n      <th>Comp.YG8.A<\/th>\n      <th>Comp.YG9.A<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>",
+        "options": {
+          "columnDefs": [
+            {
+              "className": "dt-right",
+              "targets": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71
+              ]
+            },
+            {
+              "orderable": false,
+              "targets": 0
+            }
+          ],
+          "order": [
+
+          ],
+          "autoWidth": false,
+          "orderClasses": false,
+          "ajax": {
+            "type": "POST",
+            "data": "function(d) {\nd.search.caseInsensitive = true;\nd.search.smart = true;\nd.escape = true;\nvar encodeAmp = function(x) { x.value = x.value.replace(/&/g, \"%26\"); }\nencodeAmp(d.search);\n$.each(d.columns, function(i, v) {encodeAmp(v.search);});\n}"
+          },
+          "serverSide": true,
+          "processing": true
+        },
+        "selection": {
+          "mode": "multiple",
+          "selected": null,
+          "target": "row",
+          "selectable": null
+        }
+      },
+      "evals": [
+        "options.ajax.data"
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "jquery",
+          "version": "3.6.0",
+          "src": {
+            "href": "jquery-3.6.0"
+          },
+          "meta": null,
+          "script": "jquery-3.6.0.min.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        },
+        {
+          "name": "dt-core",
+          "version": "1.12.1",
+          "src": {
+            "href": "dt-core-1.12.1"
+          },
+          "meta": null,
+          "script": "js/jquery.dataTables.min.js",
+          "stylesheet": [
+            "css/jquery.dataTables.min.css",
+            "css/jquery.dataTables.extra.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "package": null,
+          "all_files": false
+        },
+        {
+          "name": "crosstalk",
+          "version": "1.2.0",
+          "src": {
+            "href": "crosstalk-1.2.0"
+          },
+          "meta": null,
+          "script": "js/crosstalk.min.js",
+          "stylesheet": "css/crosstalk.min.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "feats_plot": {
+      "src": "[image data sha1: c1ebe9943ce2bc4654d03b8b9a43665733e9ae73]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "meta_sel": {
+      "html": "<div class=\"form-group shiny-input-container\">\n  <label class=\"control-label\" id=\"meta_val-label\" for=\"meta_val\">Group variable<\/label>\n  <div>\n    <select id=\"meta_val\"><option value=\"ID\" selected>ID<\/option>\n<option value=\"Group\">Group<\/option><\/select>\n    <script type=\"application/json\" data-for=\"meta_val\" data-nonempty=\"\">{\"plugins\":[\"selectize-plugin-a11y\"]}<\/script>\n  <\/div>\n<\/div>",
+      "deps": [
+        {
+          "name": "selectize",
+          "version": "0.12.4",
+          "src": {
+            "href": "selectize-0.12.4"
+          },
+          "meta": null,
+          "script": [
+            "js/selectize.min.js",
+            "accessibility/js/selectize-plugin-a11y.min.js"
+          ],
+          "stylesheet": "css/selectize.bootstrap3.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "metadata": {
+      "x": {
+        "filter": "none",
+        "vertical": false,
+        "container": "<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ID<\/th>\n      <th>Group<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>",
+        "options": {
+          "columnDefs": [
+            {
+              "className": "dt-right",
+              "targets": 1
+            },
+            {
+              "orderable": false,
+              "targets": 0
+            }
+          ],
+          "order": [
+
+          ],
+          "autoWidth": false,
+          "orderClasses": false,
+          "ajax": {
+            "type": "POST",
+            "data": "function(d) {\nd.search.caseInsensitive = true;\nd.search.smart = true;\nd.escape = true;\nvar encodeAmp = function(x) { x.value = x.value.replace(/&/g, \"%26\"); }\nencodeAmp(d.search);\n$.each(d.columns, function(i, v) {encodeAmp(v.search);});\n}"
+          },
+          "serverSide": true,
+          "processing": true
+        },
+        "selection": {
+          "mode": "multiple",
+          "selected": null,
+          "target": "row",
+          "selectable": null
+        }
+      },
+      "evals": [
+        "options.ajax.data"
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "jquery",
+          "version": "3.6.0",
+          "src": {
+            "href": "jquery-3.6.0"
+          },
+          "meta": null,
+          "script": "jquery-3.6.0.min.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        },
+        {
+          "name": "dt-core",
+          "version": "1.12.1",
+          "src": {
+            "href": "dt-core-1.12.1"
+          },
+          "meta": null,
+          "script": "js/jquery.dataTables.min.js",
+          "stylesheet": [
+            "css/jquery.dataTables.min.css",
+            "css/jquery.dataTables.extra.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "package": null,
+          "all_files": false
+        },
+        {
+          "name": "crosstalk",
+          "version": "1.2.0",
+          "src": {
+            "href": "crosstalk-1.2.0"
+          },
+          "meta": null,
+          "script": "js/crosstalk.min.js",
+          "stylesheet": "css/crosstalk.min.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "pca_k_plot": {
+      "src": "[image data sha1: a83a3672198f40f8b3978f8a9cd309bb4ca3bb40]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "pca_plot": {
+      "src": "[image data sha1: cee125657bcfbefe2d468c79d80bf36eddd94836]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "samp_p_pca": {
+      "src": "[image data sha1: bafaa34f3decba266ad539baa2d63f7debfbfcb3]",
+      "width": 611.328125,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 611.328125,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 611.328125,
+          "height": 400
+        }
+      }
+    },
+    "sample_var": {
+      "src": "[image data sha1: a7ce23f1db303106f7efb6a4372bda122dd7e1fc]",
+      "width": 290.65625,
+      "height": 400,
+      "alt": "Plot object",
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 290.65625,
+              "bottom": 399,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 290.65625,
+          "height": 400
+        }
+      }
+    },
+    "show_dimreduct_legend": {
+      "html": "<div id=\"show_hide_dimreduct_legend\" class=\"form-group shiny-input-radiogroup shiny-input-container\" role=\"radiogroup\" aria-labelledby=\"show_hide_dimreduct_legend-label\">\n  <label class=\"control-label\" id=\"show_hide_dimreduct_legend-label\" for=\"show_hide_dimreduct_legend\">PCA Legend<\/label>\n  <div class=\"shiny-options-group\">\n    <div class=\"radio\">\n      <label>\n        <input type=\"radio\" name=\"show_hide_dimreduct_legend\" value=\"Show\"/>\n        <span>Show<\/span>\n      <\/label>\n    <\/div>\n    <div class=\"radio\">\n      <label>\n        <input type=\"radio\" name=\"show_hide_dimreduct_legend\" value=\"Hide\" checked=\"checked\"/>\n        <span>Hide<\/span>\n      <\/label>\n    <\/div>\n  <\/div>\n<\/div>",
+      "deps": [
+
+      ]
+    }
+  },
+  "export": {
+
+  }
+}
