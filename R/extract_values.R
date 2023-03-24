@@ -8,6 +8,7 @@
 #' @param ids Character vector of ids for each row in `clustered_data`, corresponding to labels in `grps`
 #' @param meta Data frame containing translation from id to group
 #' @param grp Character value identifying the column of `meta` to use for group identifier
+#' @param cluster Data frame containing sample ID and the assigned kmeans cluster, as returned by `kmeaner()`
 #' @param ... Other objects passed to methods of `extract_values`
 #'
 #' @return A tibble with values for SampleID, Group, Cluster, PC/vector 1, and PC/vector 2
@@ -23,16 +24,16 @@ extract_values <- function(clustered_data, ...)
 #' @rdname extract_values
 #' @method extract_values prcomp
 #' @export
-extract_values.prcomp <- function(clustered_data, ids, meta, grp, ...)
+extract_values.prcomp <- function(clustered_data, ids, meta, grp, cluster = NULL, ...)
 {
-  extract_values(clustered_data$x, ids, meta, grp, ...)
+  extract_values(clustered_data$x, ids, meta, grp, cluster, ...)
 }
 
 # method for matrix object
 #' @rdname extract_values
 #' @method extract_values matrix
 #' @export
-extract_values.matrix <- function(clustered_data, ids, meta, grp, ...)
+extract_values.matrix <- function(clustered_data, ids, meta, grp, cluster = NULL, ...)
 {
   # fix "no visible global function definition" warnings in devtools::check()
   # (can't use `.data$` inside of dplyr::select)
@@ -42,6 +43,9 @@ extract_values.matrix <- function(clustered_data, ids, meta, grp, ...)
   retval <- tibble(SampleID = ids,
                    X1       = clustered_data[,1],
                    X2       = clustered_data[,2])
+
+  if(!is.null(cluster))
+    retval$cluster <- cluster$grp
 
   # grouping labels
   meta_grps <- tibble(id = meta[,1] %>% unlist(),
@@ -64,7 +68,12 @@ extract_values.matrix <- function(clustered_data, ids, meta, grp, ...)
   }
 
   # put IDs at the front and return
-  dplyr::select(retval, SampleID, Group, X1, X2)
+  if(!is.null(cluster))
+  {
+    return(dplyr::select(retval, SampleID, Group, cluster, X1, X2))
+  }else{
+    return(dplyr::select(retval, SampleID, Group, X1, X2))
+  }
 }
 
 
@@ -75,19 +84,20 @@ extract_values.matrix <- function(clustered_data, ids, meta, grp, ...)
 #' @param ids Character vector of ids for each row in `clustered_data$x`, corresponding to labels in `grps`
 #' @param meta Data frame containing translation from id to group
 #' @param grp Character value identifying the column of `meta` to use for group identifier
+#' @param cluster Data frame containing sample ID and the assigned kmeans cluster, as returned by `kmeaner()`
 #' @return a data frame with values for SampleID, Group, PC1, and PC2
 #' @export
 #' @import dplyr
-extract_sb_values <- function(clustered_data, ids, meta, grp)
+extract_sb_values <- function(clustered_data, ids, meta, grp, cluster = NULL)
 {
   # fix "no visible global function definition" warnings in devtools::check()
   # (can't use `.data$` inside of dplyr::select)
   SampleID <- Group <- PC1 <- PC2 <- NULL
 
   # pull principal components from sb_pca()
-  tibble(SampleID = ids,
-         PC1      = clustered_data$x[,'PC1'],
-         PC2      = clustered_data$x[,'PC2']) %>%
+  retval <- tibble(SampleID = ids,
+                   PC1      = clustered_data$x[,'PC1'],
+                   PC2      = clustered_data$x[,'PC2']) %>%
 
     # add grouping information
     group_by(.data$SampleID) %>%
@@ -96,6 +106,13 @@ extract_sb_values <- function(clustered_data, ids, meta, grp)
     ungroup() %>%
 
     dplyr::select(SampleID, Group, PC1, PC2)
+
+  if(!is.null(cluster))
+  {
+    retval$cluster <- cluster$grp
+  }
+
+  retval
 }
 
 
