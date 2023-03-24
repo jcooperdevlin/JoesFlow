@@ -688,13 +688,16 @@ app_server <- function(input, output, session) {
   output$pca_coord_download = downloadHandler(
     filename = 'PCA_coords.txt',
     content = function(file) {
+      # (getting a warning with the use of `.data$` inside of dplyr::rename)
+      X1 <- X2 <- NULL
 
       extract_values(clustered_data = pca_coords(),
                      ids            = data_mat()[,1],
                      meta           = meta_mat(),
-                     grp            = input$meta_val) %>%
+                     grp            = input$meta_val,
+                     cluster        = kmeaner()) %>%
 
-        rename(PC1 = .data$X1, PC2 = .data$X2) %>%
+        rename(PC1 = X1, PC2 = X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })
@@ -734,12 +737,16 @@ app_server <- function(input, output, session) {
   output$umap_coord_download = downloadHandler(
     filename = 'UMAP_coords.txt',
     content = function(file) {
+      # (getting a warning with the use of `.data$` inside of dplyr::rename)
+      X1 <- X2 <- NULL
+
       extract_values(clustered_data = umap_coords(),
                      ids            = data_mat()[,1],
                      meta           = meta_mat(),
-                     grp            = input$meta_val) %>%
+                     grp            = input$meta_val,
+                     cluster        = kmeaner()) %>%
 
-        rename(UMAP_1 = .data$X1, UMAP_2 = .data$X2) %>%
+        rename(UMAP_1 = X1, UMAP_2 = X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })
@@ -771,12 +778,16 @@ app_server <- function(input, output, session) {
   output$tsne_coord_download = downloadHandler(
     filename = 'TSNE_coords.txt',
     content = function(file) {
+      # (getting a warning with the use of `.data$` inside of dplyr::rename)
+      X1 <- X2 <- NULL
+
       extract_values(clustered_data = tsne_coords(),
                      ids            = data_mat()[,1],
                      meta           = meta_mat(),
-                     grp            = input$meta_val) %>%
+                     grp            = input$meta_val,
+                     cluster        = kmeaner()) %>%
 
-        rename(tSNE_1 = .data$X1, tSNE_2 = .data$X2) %>%
+        rename(tSNE_1 = X1, tSNE_2 = X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })

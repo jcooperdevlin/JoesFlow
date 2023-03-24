@@ -5,7 +5,7 @@
 \title{extract_sb_values
 Extract values from sample based PCA}
 \usage{
-extract_sb_values(clustered_data, ids, meta, grp)
+extract_sb_values(clustered_data, ids, meta, grp, cluster = NULL)
 }
 \arguments{
 \item{clustered_data}{Object containing clustered data (expects output from `prcomp`)}
@@ -15,6 +15,8 @@ extract_sb_values(clustered_data, ids, meta, grp)
 \item{meta}{Data frame containing translation from id to group}
 
 \item{grp}{Character value identifying the column of `meta` to use for group identifier}
+
+\item{cluster}{Data frame containing sample ID and the assigned kmeans cluster, as returned by `kmeaner()`}
 }
 \value{
 a data frame with values for SampleID, Group, PC1, and PC2
