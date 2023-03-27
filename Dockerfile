@@ -24,7 +24,7 @@ RUN R -e 'install.packages(\
     "devtools",\
     "magick",\
     "RSpectra",\
-    "shinythemes")
+    "shinythemes")\
   )'
 
 RUN R -e 'BiocManager::install("ComplexHeatmap", update=FALSE)'
@@ -45,15 +45,17 @@ RUN R -e 'install.packages(\
     "Rtsne",\
     "stringi",\
     "tidyr",\
-    "uwot")
+    "uwot")\
   )'
 
 # copy R package to image
-RUN mkdir JoesFlow JoesFlow/man JoesFlow/R JoesFlow/inst
+RUN mkdir JoesFlow JoesFlow/man JoesFlow/R JoesFlow/inst JoesFlow/inst/extdata JoesFlow/tests JoesFlow/tests/testthat
 COPY DESCRIPTION LICENSE NAMESPACE JoesFlow/.
 COPY R/* JoesFlow/R/.
 COPY man/* JoesFlow/man/.
-COPY inst/extdata/* JoesFlow/inst/.
+COPY inst/extdata/* JoesFlow/inst/extdata/.
+COPY tests/testthat.R JoesFlow/tests/.
+COPY tests/testthat/* JoesFlow/tests/testthat/.
 
 # install JoesFlow
 RUN mkdir /srv/shiny-server/JoesFlow
