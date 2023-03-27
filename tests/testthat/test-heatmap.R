@@ -5,28 +5,22 @@
 #########
 
 library(JoesFlow)
-library(stringr)
-
-# colors used in figures
-library(ggsci)
-library(RColorBrewer)
-
-colors_clusters <- c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
-colors_samples <- c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
+library(shiny)
 
 # check which data sets we can test
-setup_testing_data()
-test_data <- data(package = 'JoesFlow')$results[,'Item']
+extdata_dir  <- system.file( 'extdata', package = 'JoesFlow')
+testData_dir <- system.file('testData', package = 'JoesFlow')
 
-# `data()` doesn't seem to give me the same results for `devtools::test()` and `devtools::check()`
-# Catch that here
-if(any(grepl('sample_data', test_data)))
+test_data <- tibble(lab = 'test',
+                    flow = paste0(extdata_dir, '/flow.csv'),
+                    meta = paste0(extdata_dir, '/metadata.csv'))
+
+if(testData_dir != '')
 {
-  test_data <- test_data %>%        # format is `c("sample_data ({dataset_name})", "meta_data ({dataset_name})")` for all {dataset_name} in data/.
-    str_split(fixed('(')) %>%       # strip out "sample_data (" and "meta_data ("
-    sapply(`[`, 2) %>%
-    str_replace(fixed(')'), '') %>% # remove trailing ")"
-    unique()                        # keep unique
+  test_data <- tibble(lab = list.files(testData_dir),
+                      flow = paste0(testData_dir, '/', lab, '/flow.csv'),
+                      meta = paste0(testData_dir, '/', lab, '/metadata.csv')) %>%
+    bind_rows(test_data)
 }
 
 
@@ -35,34 +29,38 @@ if(any(grepl('sample_data', test_data)))
 #########
 
 test_that('Heatmap tests', {
-
-  ### unit tests to run on all data sets ###
-  hmp_tests <- quote({
-    # from Markers section of `app_server.R`
-    set.seed(23948)
-    kmeans_groups <- tibble(ids = sample_data[,1],
-                            grp = sample_data[,-1] %>%
-                              kmeans(10) %$% cluster %>%
-                              {paste0('C', .)}) # add a 'C' on the front of each group
-
-    h1 <- marker_heatJF(sample_data = sample_data[,-1],
-                        ids = sample_data[,1],
-                        meta = meta_data,
-                        grp = 'Group',
-                        kmeans_groups = kmeans_groups$grp,
-                        colors = colors_samples,
-                        sample_size = 500)
-
-    expect_s4_class(h1, "Heatmap")
-  })
-
-  print(paste("Testing the following data sets:", paste(test_data, collapse = ', ')))
-
-  ########## run tests ##########
-  for(i in 1:length(test_data))
+  testServer(shinyApp(ui = app_ui(),
+                      server = app_server),
   {
-    eval(parse(text = paste0('data(', test_data[i], ')')))
+    # set up inputs
+    session$setInputs(nav_bar                    = "Visualize",
+                      main_output                = 'Markers',
+                      file1                      = NULL,
+                      file2                      = NULL,
+                      subsample                  = 0.2,
+                      seed                       = 247893,
+                      meta_val                   = "ID",
+                      clust_type                 = "Kmeans",
+                      kmean                      = 5,
+                      feat_dim                   = "PCA",
+                      colpal                     = "Default",
+                      show_hide_dimreduct_legend = "Show",
+                      show_hide_cluster_legend   = "Show",
+                      plot1_brush                = NULL,
+                      download_width             = 15,
+                      download_height            = 10)
 
-    eval(hmp_tests)
-  }
+    for(i in 1:nrow(test_data))
+    {
+      # set input files (test_data_paths is a `reactiveValues` object in the app)
+      test_data_paths$flow <- test_data$flow[i]
+      test_data_paths$meta <- test_data$meta[i]
+
+
+      ### unit tests to run on all data sets ###
+
+      # check heatmap plot
+      expect_s3_class(vals$marker_heat, 'gTree')
+    }
+  })
 })

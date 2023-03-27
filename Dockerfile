@@ -15,14 +15,17 @@ RUN apt-get update && apt-get install -y \
   libharfbuzz-dev \
   libfribidi-dev
 
+# freeze dependencies
+RUN echo "options(repos = c(CRAN = 'https://packagemanager.rstudio.com/cran/2023-03-22+lA45wiyN'))" >> /usr/local/lib/R/etc/Rprofile.site
+
 # install R packge dependencies
 RUN R -e 'install.packages(\
   c("BiocManager",\
     "devtools",\
     "magick",\
     "RSpectra",\
-    "shinythemes"),\
-  repos="https://packagemanager.rstudio.com/all/2022-11-08+Y3JhbiwyOjQ1MjYyMTU7NDcyMTMxRQ")'
+    "shinythemes")\
+  )'
 
 RUN R -e 'BiocManager::install("ComplexHeatmap", update=FALSE)'
 
@@ -42,15 +45,17 @@ RUN R -e 'install.packages(\
     "Rtsne",\
     "stringi",\
     "tidyr",\
-    "uwot"),\
-  repos="https://packagemanager.rstudio.com/all/2022-11-08+Y3JhbiwyOjQ1MjYyMTU7NDcyMTMxRQ")'
+    "uwot")\
+  )'
 
 # copy R package to image
-RUN mkdir JoesFlow JoesFlow/man JoesFlow/R JoesFlow/inst
+RUN mkdir JoesFlow JoesFlow/man JoesFlow/R JoesFlow/inst JoesFlow/inst/extdata JoesFlow/tests JoesFlow/tests/testthat
 COPY DESCRIPTION LICENSE NAMESPACE JoesFlow/.
 COPY R/* JoesFlow/R/.
 COPY man/* JoesFlow/man/.
-COPY inst/extdata/* JoesFlow/inst/.
+COPY inst/extdata/* JoesFlow/inst/extdata/.
+COPY tests/testthat.R JoesFlow/tests/.
+COPY tests/testthat/* JoesFlow/tests/testthat/.
 
 # install JoesFlow
 RUN mkdir /srv/shiny-server/JoesFlow

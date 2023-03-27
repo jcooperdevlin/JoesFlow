@@ -5,28 +5,22 @@
 #########
 
 library(JoesFlow)
-library(stringr)
-
-# colors used in figures
-library(ggsci)
-library(RColorBrewer)
-
-colors_clusters <- c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
-colors_samples <- c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
+library(shiny)
 
 # check which data sets we can test
-setup_testing_data()
-test_data <- data(package = 'JoesFlow')$results[,'Item']
+extdata_dir  <- system.file( 'extdata', package = 'JoesFlow')
+testData_dir <- system.file('testData', package = 'JoesFlow')
 
-# `data()` doesn't seem to give me the same results for `devtools::test()` and `devtools::check()`
-# Catch that here
-if(any(grepl('sample_data', test_data)))
+test_data <- tibble(lab = 'test',
+                    flow = paste0(extdata_dir, '/flow.csv'),
+                    meta = paste0(extdata_dir, '/metadata.csv'))
+
+if(testData_dir != '')
 {
-  test_data <- test_data %>%        # format is `c("sample_data ({dataset_name})", "meta_data ({dataset_name})")` for all {dataset_name} in data/.
-    str_split(fixed('(')) %>%       # strip out "sample_data (" and "meta_data ("
-    sapply(`[`, 2) %>%
-    str_replace(fixed(')'), '') %>% # remove trailing ")"
-    unique()                        # keep unique
+  test_data <- tibble(lab = list.files(testData_dir),
+                      flow = paste0(testData_dir, '/', lab, '/flow.csv'),
+                      meta = paste0(testData_dir, '/', lab, '/metadata.csv')) %>%
+    bind_rows(test_data)
 }
 
 
@@ -35,69 +29,48 @@ if(any(grepl('sample_data', test_data)))
 #########
 
 test_that('PCA tests', {
-
-  ### unit tests to run on all data sets ###
-  pca_tests <- quote({
-    # from PCA Analysis section of `app_server.R` - make sure we can use any meta_data column
-    pp <- sample_data[,-1] %>%            # strip ID column
-      stats::prcomp(scale=T)              # run PCA
-
-    pp1 <- clusterJF(pp,                  # render PCA plot
-                     ids = sample_data[,1],
-                     meta = meta_data,
-                     grp = names(meta_data)[1],
-                     colors = colors_samples)
-
-    expect_s3_class(pp1, "ggplot")
-
-    pp1 <- clusterJF(pp,                  # render PCA plot
-                     ids = sample_data[,1],
-                     meta = meta_data,
-                     grp = names(meta_data)[2],
-                     colors = colors_samples)
-
-    expect_s3_class(pp1, "ggplot")
-
-    # from Kmeans and PCA Analysis sections of `app_server.R` - make sure k-means figures work
-    set.seed(23948)
-    kmeans_groups <- tibble(ids = sample_data[,1],
-                            grp = sample_data[,-1] %>%
-                              kmeans(10) %$% cluster %>%
-                              {paste0('C', .)}) # add a 'C' on the front of each group
-
-    pp2 <- clusterJF(pp,
-                     ids = sample_data[,1],
-                     meta = kmeans_groups,
-                     grp = 'grp',
-                     colors = colors_clusters,
-                     legend.name = "Cluster")
-
-    expect_s3_class(pp2, "ggplot")
-
-    # from sample-based PCA section of `app_server.R` - make sure sample-based PCA works
-    groups_table <- table(kmeans_groups)
-
-    pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
-      stats::prcomp()
-
-    pp3 <- sb_clusterJF(pp,
-                        ids = rownames(groups_table),
-                        meta = meta_data,
-                        grp = names(meta_data)[1],
-                        colors1 = colors_samples,
-                        colors2 = colors_clusters,
-                        legend.name = names(meta_data)[1])
-
-    expect_s3_class(pp3, "ggplot")
-  })
-
-  print(paste("Testing the following data sets:", paste(test_data, collapse = ', ')))
-
-  ########## run tests ##########
-  for(i in 1:length(test_data))
+  testServer(shinyApp(ui = app_ui(),
+                      server = app_server),
   {
-    eval(parse(text = paste0('data(', test_data[i], ')')))
+    # set up inputs
+    session$setInputs(nav_bar                    = "Visualize",
+                      main_output                = 'PCA',
+                      file1                      = NULL,
+                      file2                      = NULL,
+                      subsample                  = 0.2,
+                      seed                       = 247893,
+                      meta_val                   = "ID",
+                      clust_type                 = "Kmeans",
+                      kmean                      = 5,
+                      feat_dim                   = "PCA",
+                      colpal                     = "Default",
+                      show_hide_dimreduct_legend = "Show",
+                      show_hide_cluster_legend   = "Show",
+                      plot1_brush                = NULL,
+                      download_width             = 15,
+                      download_height            = 10)
 
-    eval(pca_tests)
-  }
+    for(i in 1:nrow(test_data))
+    {
+      # set input files (test_data_paths is a `reactiveValues` object in the app)
+      test_data_paths$flow <- test_data$flow[i]
+      test_data_paths$meta <- test_data$meta[i]
+
+
+      ### unit tests to run on all data sets ###
+
+      # check pca_plot
+      expect_s3_class(vals$pca_samps, "ggplot")
+
+      # check pca_k_plot
+      expect_s3_class(vals$pca_kmeans, 'ggplot')
+
+      # check sample-based pca
+      expect_s3_class(samp_pca(), 'ggplot')
+
+      # check sample-based value download
+      expect_s3_class(sb_vals(), 'tbl')
+      expect_equal(names(sb_vals()), c("SampleID", "Group", "PC1", "PC2"))
+    }
+  })
 })

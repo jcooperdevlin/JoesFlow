@@ -52,6 +52,11 @@ app_server <- function(input, output, session) {
 
   ##### Options #####
 
+  test_data_paths <- reactiveValues(flow = paste0(system.file("extdata", package = 'JoesFlow'),
+                                                  '/flow.csv'),
+                                    meta = paste0(system.file("extdata", package = 'JoesFlow'),
+                                                  '/metadata.csv'))
+
   # Upload::choose flow file
   data_mat <- reactive({
     inFile <- input$file1
@@ -67,7 +72,7 @@ app_server <- function(input, output, session) {
         # warning message will be generated when accessing the meta data - no need to notify them twice
 
         # use test data
-        inFile <- list(datapath = paste0(extdata, '/flow_test.csv'))
+        inFile <- list(datapath = test_data_paths$flow)
       }else{
         return(NULL)
       }
@@ -99,7 +104,7 @@ app_server <- function(input, output, session) {
           showModal()
 
         # use test data
-        inFile <- list(datapath = paste0(extdata, '/metadata.csv'))
+        inFile <- list(datapath = test_data_paths$meta)
       }else{
         return(NULL)
       }
@@ -683,13 +688,16 @@ app_server <- function(input, output, session) {
   output$pca_coord_download = downloadHandler(
     filename = 'PCA_coords.txt',
     content = function(file) {
+      # (getting a warning with the use of `.data$` inside of dplyr::rename)
+      X1 <- X2 <- NULL
 
       extract_values(clustered_data = pca_coords(),
                      ids            = data_mat()[,1],
                      meta           = meta_mat(),
-                     grp            = input$meta_val) %>%
+                     grp            = input$meta_val,
+                     cluster        = kmeaner()) %>%
 
-        rename(PC1 = .data$X1, PC2 = .data$X2) %>%
+        rename(PC1 = X1, PC2 = X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })
@@ -729,12 +737,16 @@ app_server <- function(input, output, session) {
   output$umap_coord_download = downloadHandler(
     filename = 'UMAP_coords.txt',
     content = function(file) {
+      # (getting a warning with the use of `.data$` inside of dplyr::rename)
+      X1 <- X2 <- NULL
+
       extract_values(clustered_data = umap_coords(),
                      ids            = data_mat()[,1],
                      meta           = meta_mat(),
-                     grp            = input$meta_val) %>%
+                     grp            = input$meta_val,
+                     cluster        = kmeaner()) %>%
 
-        rename(UMAP_1 = .data$X1, UMAP_2 = .data$X2) %>%
+        rename(UMAP_1 = X1, UMAP_2 = X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })
@@ -766,12 +778,16 @@ app_server <- function(input, output, session) {
   output$tsne_coord_download = downloadHandler(
     filename = 'TSNE_coords.txt',
     content = function(file) {
+      # (getting a warning with the use of `.data$` inside of dplyr::rename)
+      X1 <- X2 <- NULL
+
       extract_values(clustered_data = tsne_coords(),
                      ids            = data_mat()[,1],
                      meta           = meta_mat(),
-                     grp            = input$meta_val) %>%
+                     grp            = input$meta_val,
+                     cluster        = kmeaner()) %>%
 
-        rename(tSNE_1 = .data$X1, tSNE_2 = .data$X2) %>%
+        rename(tSNE_1 = X1, tSNE_2 = X2) %>%
 
         utils::write.table(file, sep='\t', quote=FALSE, row.names=FALSE)
     })

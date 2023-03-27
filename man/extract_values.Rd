@@ -9,9 +9,9 @@ Extract values from PCA, UMAP, and tSNE}
 \usage{
 extract_values(clustered_data, ...)
 
-\method{extract_values}{prcomp}(clustered_data, ids, meta, grp, ...)
+\method{extract_values}{prcomp}(clustered_data, ids, meta, grp, cluster = NULL, ...)
 
-\method{extract_values}{matrix}(clustered_data, ids, meta, grp, ...)
+\method{extract_values}{matrix}(clustered_data, ids, meta, grp, cluster = NULL, ...)
 }
 \arguments{
 \item{clustered_data}{Object containing clustered data (expects output from `prcomp`, `umap`, or `tsne`)}
@@ -23,6 +23,8 @@ extract_values(clustered_data, ...)
 \item{meta}{Data frame containing translation from id to group}
 
 \item{grp}{Character value identifying the column of `meta` to use for group identifier}
+
+\item{cluster}{Data frame containing sample ID and the assigned kmeans cluster, as returned by `kmeaner()`}
 }
 \value{
 A tibble with values for SampleID, Group, Cluster, PC/vector 1, and PC/vector 2
