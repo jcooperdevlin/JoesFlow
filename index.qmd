@@ -22,7 +22,7 @@ The recommended method for running JoesFlow is using Docker, because the images 
 -   Start JoesFlow with the following command: `docker run --user shiny --rm -ti -p 3838:3838 idssniaid/joes-flow`
     -   The first time you run this will take several minutes, as it will have to download the image to your computer. The next time you start it up should only take a few seconds.
     -   Update your local image (e.g. to update to a new version) with the following command: `docker pull idssniaid/joes-flow`
-    -   These instructions assume you are running the [production version of JoesFlow](https://hub.docker.com/repository/docker/idssniaid/joes-flow). To run a [development version](https://hub.docker.com/repository/docker/johnsonra/joes-flow), which may grant early access to features as well as possible unresolved bugs, use the image tag, `johnsonra/joes-flow`.
+    -   These instructions assume you are running the [production version of JoesFlow](https://hub.docker.com/repository/docker/idssniaid/joes-flow). To run a [development version](https://hub.docker.com/repository/docker/idssniaid/joes-flow-dev), which may grant early access to features as well as possible unresolved bugs, use the image tag, `idssniaid/joes-flow-dev`.
 -   Once JoesFlow is running, open this page in your favorite browser: <http://localhost:3838/JoesFlow>
 -   To shut down the Docker image when finished, you can enter the command `control-c` in the Terminal/PowerShell window and close it.
 
@@ -73,8 +73,8 @@ set.seed(238479)
 
 The following channels are available to get help with JoesFlow:
 
-* Sign up for the [JoesFlow mailing list](https://list.nih.gov) (search for "JoesFlow")
-* [Submit an issue on GitHub](https://github.com/niaid/JoesFlow/issues)
+-   Sign up for the [JoesFlow mailing list](https://list.nih.gov) (search for "JoesFlow")
+-   [Submit an issue on GitHub](https://github.com/niaid/JoesFlow/issues)
 
 ## Data format
 
@@ -86,35 +86,35 @@ Need documentation of expected data format
 
 ```{r test_data}
 #| echo: false
-sample_data <- read.csv('https://raw.githubusercontent.com/niaid/JoesFlow/main/tests/flow_test.csv',
+sample_data <- read.csv('https://raw.githubusercontent.com/niaid/JoesFlow/main/inst/extdata/flow.csv',
                         sep=',', header=T)
 
-meta_data <- read.csv('https://raw.githubusercontent.com/niaid/JoesFlow/main/tests/metadata.csv',
+meta_data <- read.csv('https://raw.githubusercontent.com/niaid/JoesFlow/main/inst/extdata/metadata.csv',
                       header=T, sep=',')
 ```
 
-Sample [flow file](https://github.com/NIAID/JoesFlow/blob/main/tests/flow_test.csv).
+Sample [flow file](https://raw.githubusercontent.com/niaid/JoesFlow/main/inst/extdata/flow.csv).
 
 ```{r test_data output1}
 #| echo: false
 #| eval: false
 
 # code used to generate the following image
-datatable(sample_data[1:100,1:20])
+DT::datatable(sample_data[1:100,1:20])
 ```
 
 ![](img/test_data-1.png)
 
 ### Metadata file
 
-Sample [metadata file](https://github.com/NIAID/JoesFlow/blob/main/tests/metadata.csv).
+Sample [metadata file](https://raw.githubusercontent.com/niaid/JoesFlow/main/inst/extdata/metadata.csv).
 
 ```{r test_data output2}
 #| echo: false
 #| eval: false
 
 # code used to generate the following image
-datatable(meta_data)
+DT::datatable(meta_data)
 ```
 
 ![](img/test_data-2.png)
@@ -142,19 +142,23 @@ Need documentation of JoesFlow output. A few figures are shown here, but there a
 pp <- select(sample_data, -SampleID) %>%
   prcomp(scale=T)
   
-pc1 <- clusterJF(pp, ids = sample_data$SampleID, 
-            meta = meta_data$Group, 
-            colors = colors_samples)
+pc1 <- clusterJF(pp, 
+                 ids = sample_data$SampleID, 
+                 meta = meta_data,
+                 grp = 'Group',
+                 colors = colors_samples)
  
 # Kmeans cluster
 set.seed(23948)
-kmeans_groups <- select(sample_data, -SampleID) %>%
-  kmeans(10) %$% cluster %>%
-  {paste0('C', .)} # add a 'C' on the front of each group
-names(kmeans_groups) <- sample_data$SampleID
-  
-pc2 <- clusterJF(pp, ids = 1:nrow(sample_data),
+kmeans_groups <- tibble(ids = sample_data$SampleID,
+                        grp = {select(sample_data, -SampleID) %>%
+                            kmeans(10) %$% cluster %>%
+                            {paste0('C', .)}}) # add a 'C' on the front of each group
+
+pc2 <- clusterJF(pp, 
+                 ids = sample_data$SampleID,
                  meta = kmeans_groups,
+                 grp = 'grp',
                  colors = colors_clusters,
                  legend.name = 'Kmeans')
 
@@ -170,12 +174,18 @@ pc1 + pc2
 mnist_umap <- select(sample_data, -SampleID) %>%
   umap(pca = 15, fast_sgd = TRUE)
 
-um1 <- clusterJF(mnist_umap, ids = sample_data$SampleID,
-                 meta = meta_data$Group,
+um1 <- clusterJF(mnist_umap, 
+                 axis_prefix = 'UMAP',
+                 ids = sample_data$SampleID,
+                 meta = meta_data,
+                 grp = 'Group',
                  colors = colors_samples)
 
-um2 <- clusterJF(mnist_umap, ids = 1:nrow(sample_data),
+um2 <- clusterJF(mnist_umap, 
+                 axis_prefix = 'UMAP',
+                 ids = kmeans_groups$ids,
                  meta = kmeans_groups,
+                 grp = 'grp',
                  colors = colors_clusters,
                  legend.name = 'Kmeans')
 
@@ -188,13 +198,15 @@ um1 + um2
 #| echo: false
 
 # sample-based pca
-groups_table <- with(sample_data, table(SampleID, kmeans_groups))
+groups_table <- with(sample_data, table(SampleID, kmeans_groups$grp))
 
 pp <- apply(groups_table, 2, function(x) x / rowSums(groups_table)) %>%
   prcomp()
 
-gg3 <- sb_clusterJF(pp, ids = rownames(groups_table),
-                    meta = meta_data$Group,
+gg3 <- sb_clusterJF(pp, 
+                    ids = rownames(groups_table),
+                    meta = meta_data,
+                    grp = 'Group',
                     colors1 = colors_samples,
                     colors2 = colors_clusters)
 
@@ -205,7 +217,7 @@ gg3
 
 ```{r comp_plot, fig.height = 6, fig.width = 8, fig.align = "center"}
 #| echo: false
-compositionJF(meta, kmeans_groups, colors_clusters)$g1
+compositionJF(meta_data, 'Group', kmeans_groups, colors_clusters)$g1
 ```
 
 ![](img/comp_plot-2.png)
@@ -217,8 +229,9 @@ compositionJF(meta, kmeans_groups, colors_clusters)$g1
 # marker heat plot
 select(sample_data, -SampleID) %>%
   marker_heatJF(ids = sample_data$SampleID,
-                meta = meta_data$Group,
-                kmeans_groups = kmeans_groups,
+                meta = meta_data,
+                grp = 'Group',
+                kmeans_groups = kmeans_groups$grp,
                 colors = colors_samples,
                 sample_size = 500)
 ```
