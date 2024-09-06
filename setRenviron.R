@@ -1,9 +1,20 @@
-# Skyline_dev environmental variables
+# Skyline_prod environmental variables
 
-root <- here::here()
+library(httr)
+library(jsonlite)
 
-Sys.setenv(jf_user = Sys.getenv("USER"))
-Sys.setenv(jf_db_path = file.path(root, "Shiny", "jf_users.sqlite"))
-Sys.setenv(jf_db_pass = system("op read op://Private/JoesFlow/jf_db_pass", intern = TRUE))
+# Define the API endpoint
+api_url <- paste0(Sys.getenv("CONNECT_SERVER"), "/__api__/v1/user")
 
-Sys.setenv(hpc_rsa_pass = system("op read op://Private/JoesFlow/Skyline_key", intern = TRUE))
+# Get the API key from environment variable or configuration
+api_key <- Sys.getenv("CONNECT_API_KEY")
+
+# Make the API request
+response <- GET(api_url, add_headers(Authorization = paste("Key", api_key)))
+
+# Check if the request was successful
+if (status_code(response) == 200) {
+  Sys.setenv(jf_user = fromJSON(content(response, "text", encoding = "UTF-8"))$username)
+} else {
+  Sys.setenv(jf_user = 'unknown')
+}
