@@ -1,0 +1,10 @@
+default:
+  hpc_url: "ai-hpcsubmit1.niaid.nih.gov"
+  hpc_root: "~"
+
+Skyline_dev:
+  hpc_root: "~/Documents/JoesFlow"
+  setup_script: "shiny/configure.R"
+  username: "R.utils::System$getUsername()"
+  passwd: "op read op://Private/JoesFlow/Skyline_key"
+  keyfile: "~/.ssh/id_rsa"
